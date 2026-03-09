@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-primary: #00BBCD;
+  --color-brand-secondary: #005E4E;
+  --color-bg-light: #F2F2ED;
+  --color-bg-dark: #001E21;
+}
+
+/* Force dark mode to work with .dark class in Tailwind 4 */
+@variant dark (&:where(.dark, .dark *));
+
+:root {
+  background-color: var(--color-bg-light);
+  color: #111827;
+  color-scheme: light;
+}
+
+.dark {
+  background-color: var(--color-bg-dark);
+  color: #f9fafb;
+  color-scheme: dark;
+}
+
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.3);
+    border-radius: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(156, 163, 175, 0.5);
+  }
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(75, 85, 99, 0.4);
+  }
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(75, 85, 99, 0.6);
+  }
+}
