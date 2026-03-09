@@ -124,16 +124,6 @@ const ContentModal: React.FC<ContentModalProps> = ({ isOpen, onClose, contentToE
     setIsSaving(true);
 
     try {
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-
-      if (userError || !userData.user) {
-        toast.error('Você precisa estar logado para salvar conteúdo.');
-        setIsSaving(false);
-        return;
-      }
-
-      const user = userData.user;
-
       if (contentToEdit) {
         const { data, error } = await supabase
           .from('contents')
@@ -173,7 +163,6 @@ const ContentModal: React.FC<ContentModalProps> = ({ isOpen, onClose, contentToE
           .from('contents')
           .insert([
             {
-              user_id: user.id,
               title: formData.title,
               description: formData.briefing || '',
               briefing: formData.briefing || '',
