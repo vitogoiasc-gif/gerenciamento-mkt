@@ -56,7 +56,10 @@ const ContentModal: React.FC<ContentModalProps> = ({ isOpen, onClose, contentToE
           (contentToEdit as any).image_url ??
           '',
         imageName: contentToEdit.imageName ?? '',
-        videoData: contentToEdit.videoData ?? '',
+        videoData:
+          contentToEdit.videoData ??
+          (contentToEdit as any).video_url ??
+          '',
         videoName: contentToEdit.videoName ?? '',
         externalLink:
           contentToEdit.externalLink ??
@@ -167,6 +170,7 @@ const ContentModal: React.FC<ContentModalProps> = ({ isOpen, onClose, contentToE
             manager_comments: formData.managerComments || '',
             published_post_link: formData.publishedPostLink || '',
             image_url: formData.imageData || '',
+            video_url: formData.videoData || '',
             scheduled_for: formData.publishDate || null,
           })
           .eq('id', contentToEdit.id)
@@ -188,6 +192,7 @@ const ContentModal: React.FC<ContentModalProps> = ({ isOpen, onClose, contentToE
           managerComments: data.manager_comments ?? formData.managerComments ?? '',
           publishedPostLink: data.published_post_link ?? formData.publishedPostLink ?? '',
           imageData: data.image_url ?? formData.imageData ?? '',
+          videoData: data.video_url ?? formData.videoData ?? '',
           publishDate: data.scheduled_for ?? formData.publishDate ?? '',
           channel: data.channel ?? formData.channel ?? 'Instagram',
           briefing: data.briefing ?? data.description ?? formData.briefing ?? '',
@@ -209,6 +214,7 @@ const ContentModal: React.FC<ContentModalProps> = ({ isOpen, onClose, contentToE
               manager_comments: formData.managerComments || '',
               published_post_link: formData.publishedPostLink || '',
               image_url: formData.imageData || '',
+              video_url: formData.videoData || '',
               scheduled_for: formData.publishDate || null,
             },
           ])
@@ -229,6 +235,7 @@ const ContentModal: React.FC<ContentModalProps> = ({ isOpen, onClose, contentToE
           managerComments: data.manager_comments ?? formData.managerComments ?? '',
           publishedPostLink: data.published_post_link ?? formData.publishedPostLink ?? '',
           imageData: data.image_url ?? formData.imageData ?? '',
+          videoData: data.video_url ?? formData.videoData ?? '',
           publishDate: data.scheduled_for ?? formData.publishDate ?? '',
           channel: data.channel ?? formData.channel ?? 'Instagram',
           briefing: data.briefing ?? data.description ?? formData.briefing ?? '',
