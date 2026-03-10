@@ -37,7 +37,39 @@ const ContentModal: React.FC<ContentModalProps> = ({ isOpen, onClose, contentToE
     setIsImageExpanded(false);
 
     if (contentToEdit) {
-      setFormData(contentToEdit);
+      setFormData({
+        ...contentToEdit,
+        briefing: contentToEdit.briefing ?? (contentToEdit as any).description ?? '',
+        channel: contentToEdit.channel ?? (contentToEdit as any).channel ?? 'Instagram',
+        format: contentToEdit.format ?? (contentToEdit as any).format ?? 'Post',
+        publishDate:
+          contentToEdit.publishDate ??
+          (contentToEdit as any).scheduled_for?.split('T')[0] ??
+          new Date().toISOString().split('T')[0],
+        status: contentToEdit.status ?? 'Ideia',
+        publishedPostLink:
+          contentToEdit.publishedPostLink ??
+          (contentToEdit as any).published_post_link ??
+          '',
+        imageData:
+          contentToEdit.imageData ??
+          (contentToEdit as any).image_url ??
+          '',
+        imageName: contentToEdit.imageName ?? '',
+        videoData:
+          contentToEdit.videoData ??
+          (contentToEdit as any).video_url ??
+          '',
+        videoName: contentToEdit.videoName ?? '',
+        externalLink:
+          contentToEdit.externalLink ??
+          (contentToEdit as any).external_link ??
+          '',
+        managerComments:
+          contentToEdit.managerComments ??
+          (contentToEdit as any).manager_comments ??
+          '',
+      });
     } else {
       setFormData({
         title: '',
@@ -138,6 +170,7 @@ const ContentModal: React.FC<ContentModalProps> = ({ isOpen, onClose, contentToE
             manager_comments: formData.managerComments || '',
             published_post_link: formData.publishedPostLink || '',
             image_url: formData.imageData || '',
+            video_url: formData.videoData || '',
             scheduled_for: formData.publishDate || null,
           })
           .eq('id', contentToEdit.id)
@@ -155,6 +188,14 @@ const ContentModal: React.FC<ContentModalProps> = ({ isOpen, onClose, contentToE
           ...contentToEdit,
           ...formData,
           id: data.id,
+          externalLink: data.external_link ?? formData.externalLink ?? '',
+          managerComments: data.manager_comments ?? formData.managerComments ?? '',
+          publishedPostLink: data.published_post_link ?? formData.publishedPostLink ?? '',
+          imageData: data.image_url ?? formData.imageData ?? '',
+          videoData: data.video_url ?? formData.videoData ?? '',
+          publishDate: data.scheduled_for ?? formData.publishDate ?? '',
+          channel: data.channel ?? formData.channel ?? 'Instagram',
+          briefing: data.briefing ?? data.description ?? formData.briefing ?? '',
         } as Content);
 
         toast.success('Conteúdo atualizado com sucesso!');
@@ -173,6 +214,7 @@ const ContentModal: React.FC<ContentModalProps> = ({ isOpen, onClose, contentToE
               manager_comments: formData.managerComments || '',
               published_post_link: formData.publishedPostLink || '',
               image_url: formData.imageData || '',
+              video_url: formData.videoData || '',
               scheduled_for: formData.publishDate || null,
             },
           ])
@@ -189,6 +231,14 @@ const ContentModal: React.FC<ContentModalProps> = ({ isOpen, onClose, contentToE
         addContent({
           ...formData,
           id: data.id || uuidv4(),
+          externalLink: data.external_link ?? formData.externalLink ?? '',
+          managerComments: data.manager_comments ?? formData.managerComments ?? '',
+          publishedPostLink: data.published_post_link ?? formData.publishedPostLink ?? '',
+          imageData: data.image_url ?? formData.imageData ?? '',
+          videoData: data.video_url ?? formData.videoData ?? '',
+          publishDate: data.scheduled_for ?? formData.publishDate ?? '',
+          channel: data.channel ?? formData.channel ?? 'Instagram',
+          briefing: data.briefing ?? data.description ?? formData.briefing ?? '',
         } as Content);
 
         toast.success('Conteúdo criado com sucesso!');

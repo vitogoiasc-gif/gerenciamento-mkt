@@ -35,7 +35,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       if (error) {
         console.error('Erro ao carregar conteúdos:', error);
       } else if (data) {
-        setContents(data as Content[]);
+        setContents(
+          data.map((item: any) => ({
+            ...item,
+            externalLink: item.external_link ?? '',
+            managerComments: item.manager_comments ?? '',
+            publishDate: item.scheduled_for ?? '',
+            publishedPostLink: item.published_post_link ?? '',
+            imageData: item.image_url ?? '',
+            videoData: item.video_url ?? '',
+            channel: item.channel ?? 'Instagram',
+            briefing: item.briefing ?? item.description ?? '',
+          })) as Content[]
+        );
       }
     }
 
