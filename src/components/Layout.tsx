@@ -39,17 +39,20 @@ const Layout: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-bg-light dark:bg-bg-dark text-gray-900 dark:text-gray-100 font-sans transition-colors duration-300">
+
       {/* Sidebar */}
       <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col transition-all duration-300 overflow-hidden`}>
+
         <div className="p-4 flex items-center justify-center h-[72px]">
-          <button 
-            onClick={toggleSidebar} 
+          <button
+            onClick={toggleSidebar}
             className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-400 transition-colors"
             title={isSidebarCollapsed ? "Expandir menu" : "Recolher menu"}
           >
             <PanelLeft size={20} />
           </button>
         </div>
+
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {navItems.map((item) => (
             <NavLink
@@ -57,10 +60,9 @@ const Layout: React.FC = () => {
               to={item.to}
               title={isSidebarCollapsed ? item.label : undefined}
               className={({ isActive }) =>
-                `flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-lg transition-colors whitespace-nowrap ${
-                  isActive
-                    ? 'bg-brand-primary/10 text-brand-secondary dark:text-brand-primary font-medium'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'
+                `flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-lg transition-colors whitespace-nowrap ${isActive
+                  ? 'bg-brand-primary/10 text-brand-secondary dark:text-brand-primary font-medium'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'
                 }`
               }
             >
@@ -69,25 +71,42 @@ const Layout: React.FC = () => {
             </NavLink>
           ))}
         </nav>
-        <div className="p-4 border-t border-gray-200 dark:border-gray-800 whitespace-nowrap">
+
+        {/* BOTÃO ONEDRIVE */}
+        <div className="p-4 border-t border-gray-200 dark:border-gray-800 flex justify-center">
+          <a
+            href="https://grupotse-my.sharepoint.com/:f:/g/personal/thais_preda_tsea_com_br/IgAIBoECy4nfRZcySIckNR7cAQlMgArtJOFXcsqUSsX4osU?e=PzUFul"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 transition-colors"
+            title="Abrir pasta de Marketing"
+          >
+            📁
+            {!isSidebarCollapsed && <span>Arquivos MKT</span>}
+          </a>
         </div>
+
       </aside>
 
-      {/* Main Content */}
+      {/* MAIN */}
       <main className="flex-1 flex flex-col overflow-hidden">
+
+        {/* HEADER */}
         <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-8 py-4 flex justify-end items-center">
+
           <div className="flex items-center gap-6">
-            {/* Notifications */}
+
+            {/* NOTIFICAÇÕES */}
             <div className="relative" ref={notificationRef}>
               <button
                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                className={`relative p-2 rounded-full transition-all ${
-                  isNotificationsOpen 
-                    ? 'bg-brand-primary/10 text-brand-primary' 
+                className={`relative p-2 rounded-full transition-all ${isNotificationsOpen
+                    ? 'bg-brand-primary/10 text-brand-primary'
                     : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-400'
-                }`}
+                  }`}
               >
                 <Bell size={22} />
+
                 {contentsWithFeedback.length > 0 && (
                   <span className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white dark:border-gray-900 animate-pulse">
                     {contentsWithFeedback.length}
@@ -96,105 +115,83 @@ const Layout: React.FC = () => {
               </button>
 
               {isNotificationsOpen && (
-                <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-800 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-800 z-50 overflow-hidden">
+
                   <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 flex justify-between items-center">
-                    <h3 className="font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                    <h3 className="font-bold flex items-center gap-2">
                       <AlertCircle size={18} className="text-amber-500" />
                       Ajustes Pendentes
                     </h3>
-                    <span className="text-[10px] font-bold px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full uppercase">
-                      {contentsWithFeedback.length} Alertas
-                    </span>
                   </div>
-                  
-                  <div className="max-h-96 overflow-y-auto custom-scrollbar">
-                    {contentsWithFeedback.length === 0 ? (
-                      <div className="p-8 text-center">
-                        <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3">
-                          <Bell size={20} className="text-gray-400" />
+
+                  <div className="max-h-96 overflow-y-auto">
+                    {contentsWithFeedback.map(content => (
+                      <button
+                        key={content.id}
+                        onClick={() => handleNotificationClick(content)}
+                        className="w-full p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-800 flex gap-3"
+                      >
+                        <MessageSquare size={18} />
+                        <div>
+                          <p className="text-sm font-semibold">{content.title}</p>
+                          <p className="text-xs italic">{content.managerComments}</p>
                         </div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Nenhum ajuste pendente no momento.</p>
-                      </div>
-                    ) : (
-                      <div className="divide-y divide-gray-100 dark:divide-gray-800">
-                        {contentsWithFeedback.map(content => (
-                          <button
-                            key={content.id}
-                            onClick={() => handleNotificationClick(content)}
-                            className="w-full p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors flex gap-3 group"
-                          >
-                            <div className="w-10 h-10 rounded-lg bg-amber-50 dark:bg-amber-900/20 flex-shrink-0 flex items-center justify-center text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-800/50">
-                              <MessageSquare size={18} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate group-hover:text-brand-primary transition-colors">
-                                {content.title}
-                              </p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mt-0.5 italic">
-                                "{content.managerComments}"
-                              </p>
-                              <div className="flex items-center gap-2 mt-2">
-                                <span className="text-[10px] font-bold px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded uppercase tracking-wider">
-                                  {content.channel}
-                                </span>
-                                <span className="text-[10px] text-gray-400 dark:text-gray-500">
-                                  {content.status}
-                                </span>
-                              </div>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                      </button>
+                    ))}
                   </div>
-                  
-                  {contentsWithFeedback.length > 0 && (
-                    <div className="p-3 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-800 text-center">
-                      <p className="text-[10px] text-gray-500 dark:text-gray-400">Clique em um item para ver os detalhes e ajustar.</p>
-                    </div>
-                  )}
+
                 </div>
               )}
             </div>
 
+            {/* DARK MODE */}
             <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl border border-gray-200 dark:border-gray-700">
+
               <button
                 onClick={() => isDarkMode && toggleDarkMode()}
-                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-2 text-sm font-medium ${
-                  !isDarkMode 
-                    ? 'bg-white text-brand-secondary shadow-sm ring-1 ring-gray-200' 
-                    : 'text-gray-500 hover:text-gray-300'
-                }`}
+                className={`px-3 py-1.5 rounded-lg flex items-center gap-2 text-sm ${!isDarkMode ? 'bg-white shadow-sm' : ''
+                  }`}
               >
                 <Sun size={16} />
                 <span>Claro</span>
               </button>
+
               <button
                 onClick={() => !isDarkMode && toggleDarkMode()}
-                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-2 text-sm font-medium ${
-                  isDarkMode 
-                    ? 'bg-gray-700 text-brand-primary shadow-sm ring-1 ring-gray-600' 
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
+                className={`px-3 py-1.5 rounded-lg flex items-center gap-2 text-sm ${isDarkMode ? 'bg-gray-700 shadow-sm' : ''
+                  }`}
               >
                 <Moon size={16} />
                 <span>Escuro</span>
               </button>
+
             </div>
           </div>
+
         </header>
+
+        {/* CONTEÚDO */}
         <div className="flex-1 overflow-y-auto p-8 bg-gray-50/50 dark:bg-bg-dark">
+
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 h-full">
             <Outlet />
           </div>
+
+          {/* FOOTER */}
+          <footer className="mt-10 text-center text-sm text-gray-500 dark:text-gray-400 border-t pt-6">
+            Sistema Gerenciamento MKT © {new Date().getFullYear()}
+          </footer>
+
         </div>
+
       </main>
 
-      <ContentModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        contentToEdit={selectedContent} 
+      <ContentModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        contentToEdit={selectedContent}
       />
+
     </div>
   );
 };
