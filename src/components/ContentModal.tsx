@@ -486,6 +486,7 @@ const ContentModal: React.FC<ContentModalProps> = ({ isOpen, onClose, contentToE
                 <option value="YouTube">YouTube</option>
                 <option value="LinkedIn">LinkedIn</option>
                 <option value="Email">Email</option>
+                <option value="Interno">Interno</option>
               </select>
             </div>
 
