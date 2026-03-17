@@ -108,6 +108,7 @@ const Kanban: React.FC = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedContent, setSelectedContent] = useState<Content | undefined>(undefined);
+  const [initialStatus, setInitialStatus] = useState<Content['status']>('Ideia');
 
   useEffect(() => {
     const newBoardData: Record<Content['status'], Content[]> = {
@@ -186,16 +187,19 @@ const Kanban: React.FC = () => {
 
   const handleAddClick = () => {
     setSelectedContent(undefined);
+    setInitialStatus('Ideia');
     setIsModalOpen(true);
   };
 
   const handleAddClickByColumn = (status: Content['status']) => {
-    setSelectedContent({ status } as Content);
+    setSelectedContent(undefined);
+    setInitialStatus(status);
     setIsModalOpen(true);
   };
 
   const handleEditClick = (content: Content) => {
     setSelectedContent(content);
+    setInitialStatus(content.status);
     setIsModalOpen(true);
   };
 
@@ -411,6 +415,7 @@ const Kanban: React.FC = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         contentToEdit={selectedContent}
+        initialStatus={initialStatus}
       />
     </div>
   );

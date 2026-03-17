@@ -32,6 +32,8 @@ const ContentModal: React.FC<ContentModalProps> = ({
   const [isImageExpanded, setIsImageExpanded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  const isEditing = Boolean(contentToEdit?.id);
+
   const [formData, setFormData] = useState<Partial<Content>>({
     title: '',
     briefing: '',
@@ -51,7 +53,7 @@ const ContentModal: React.FC<ContentModalProps> = ({
   useEffect(() => {
     setIsImageExpanded(false);
 
-    if (contentToEdit) {
+    if (isEditing && contentToEdit) {
       setFormData({
         ...contentToEdit,
         briefing: contentToEdit.briefing ?? (contentToEdit as any).description ?? '',
@@ -91,7 +93,7 @@ const ContentModal: React.FC<ContentModalProps> = ({
         managerComments: '',
       });
     }
-  }, [contentToEdit, isOpen, initialStatus]);
+  }, [contentToEdit, isOpen, initialStatus, isEditing]);
 
   if (!isOpen) return null;
 
@@ -130,7 +132,7 @@ const ContentModal: React.FC<ContentModalProps> = ({
 
       const { data } = supabase.storage.from('content-media').getPublicUrl(filePath);
 
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         imageData: data.publicUrl,
         imageName: file.name,
@@ -145,9 +147,9 @@ const ContentModal: React.FC<ContentModalProps> = ({
 
   const removeFile = (type: 'image' | 'video') => {
     if (type === 'image') {
-      setFormData(prev => ({ ...prev, imageData: '', imageName: '' }));
+      setFormData((prev) => ({ ...prev, imageData: '', imageName: '' }));
     } else {
-      setFormData(prev => ({ ...prev, videoData: '', videoName: '' }));
+      setFormData((prev) => ({ ...prev, videoData: '', videoName: '' }));
     }
   };
 
@@ -174,7 +176,7 @@ const ContentModal: React.FC<ContentModalProps> = ({
     setIsSaving(true);
 
     try {
-      if (contentToEdit) {
+      if (isEditing && contentToEdit) {
         const { data, error } = await supabase
           .from('contents')
           .update({
@@ -226,7 +228,7 @@ const ContentModal: React.FC<ContentModalProps> = ({
               description: formData.briefing || '',
               briefing: formData.briefing || '',
               format: formData.format || '',
-              status: formData.status || 'Ideia',
+              status: formData.status || initialStatus || 'Ideia',
               channel: formData.channel || 'Instagram',
               external_link: formData.externalLink || '',
               manager_comments: formData.managerComments || '',
@@ -249,6 +251,7 @@ const ContentModal: React.FC<ContentModalProps> = ({
         addContent({
           ...formData,
           id: data.id || uuidv4(),
+          status: data.status ?? formData.status ?? initialStatus ?? 'Ideia',
           externalLink: data.external_link ?? formData.externalLink ?? '',
           managerComments: data.manager_comments ?? formData.managerComments ?? '',
           publishedPostLink: data.published_post_link ?? formData.publishedPostLink ?? '',
@@ -256,6 +259,8 @@ const ContentModal: React.FC<ContentModalProps> = ({
           videoData: data.video_url ?? formData.videoData ?? '',
           publishDate: data.scheduled_for ?? formData.publishDate ?? '',
           channel: data.channel ?? formData.channel ?? 'Instagram',
+          format: data.format ?? formData.format ?? 'Post',
+          title: data.title ?? formData.title ?? '',
           briefing: data.briefing ?? data.description ?? formData.briefing ?? '',
         } as Content);
 
@@ -274,15 +279,15 @@ const ContentModal: React.FC<ContentModalProps> = ({
   const hasDirectVideoPreview = isDirectVideoUrl(formData.videoData);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] border dark:border-gray-800">
-        <div className="p-6 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-800/50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+      <div className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-xl border bg-white shadow-xl dark:border-gray-800 dark:bg-gray-900">
+        <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 p-6 dark:border-gray-800 dark:bg-gray-800/50">
           <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-            {contentToEdit ? 'Editar Conteúdo' : 'Novo Conteúdo'}
+            {isEditing ? 'Editar Conteúdo' : 'Novo Conteúdo'}
           </h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            className="text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-gray-300"
           >
             <X size={24} />
           </button>
@@ -290,55 +295,55 @@ const ContentModal: React.FC<ContentModalProps> = ({
 
         <form
           onSubmit={handleSubmit}
-          className="p-6 space-y-4 overflow-y-auto flex-1 custom-scrollbar"
+          className="custom-scrollbar flex-1 space-y-4 overflow-y-auto p-6"
         >
           {(formData.imageData || formData.videoData) && (
-            <div className="space-y-3 pb-4 border-b border-gray-100 dark:border-gray-800">
+            <div className="space-y-3 border-b border-gray-100 pb-4 dark:border-gray-800">
               <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                 Galeria de Mídia
               </h4>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {formData.imageData && (
                   <>
                     <div
                       onClick={() => setIsImageExpanded(true)}
-                      className="relative group rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 aspect-video cursor-zoom-in"
+                      className="group relative aspect-video cursor-zoom-in overflow-hidden rounded-lg border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800"
                     >
                       <img
                         src={formData.imageData}
                         alt="Preview"
-                        className="w-full h-full object-contain"
+                        className="h-full w-full object-contain"
                       />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span className="text-white text-xs font-medium px-2 py-1 bg-black/50 rounded">
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                        <span className="rounded bg-black/50 px-2 py-1 text-xs font-medium text-white">
                           Expandir Imagem
                         </span>
                       </div>
                     </div>
 
                     {isImageExpanded && (
-                      <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 sm:p-8 animate-in fade-in duration-200">
+                      <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/95 p-4 backdrop-blur-md animate-in fade-in duration-200 sm:p-8">
                         <button
                           type="button"
                           onClick={() => setIsImageExpanded(false)}
-                          className="absolute top-6 right-6 text-white/70 hover:text-white transition-colors bg-white/10 p-2 rounded-full hover:bg-white/20 z-[70]"
+                          className="absolute right-6 top-6 z-[70] rounded-full bg-white/10 p-2 text-white/70 transition-colors hover:bg-white/20 hover:text-white"
                         >
                           <X size={32} />
                         </button>
 
-                        <div className="flex flex-col lg:flex-row w-full h-full max-w-7xl gap-6 items-center justify-center">
-                          <div className="flex-1 flex items-center justify-center w-full h-full min-h-0">
+                        <div className="flex h-full w-full max-w-7xl flex-col items-center justify-center gap-6 lg:flex-row">
+                          <div className="flex h-full min-h-0 w-full flex-1 items-center justify-center">
                             <img
                               src={formData.imageData}
                               alt="Expanded"
-                              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-300"
+                              className="max-h-full max-w-full rounded-lg object-contain shadow-2xl animate-in zoom-in-95 duration-300"
                             />
                           </div>
 
-                          <div className="w-full lg:w-80 bg-white dark:bg-gray-900 rounded-xl shadow-2xl flex flex-col max-h-[400px] lg:max-h-full animate-in slide-in-from-right-8 duration-300">
-                            <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex items-center gap-2">
-                              <div className="w-8 h-8 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary">
+                          <div className="flex max-h-[400px] w-full flex-col rounded-xl bg-white shadow-2xl animate-in slide-in-from-right-8 duration-300 dark:bg-gray-900 lg:w-80 lg:max-h-full">
+                            <div className="flex items-center gap-2 border-b border-gray-200 p-4 dark:border-gray-800">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-primary/10 text-brand-primary">
                                 <ImageIcon size={18} />
                               </div>
                               <h3 className="font-bold text-gray-900 dark:text-gray-100">
@@ -346,30 +351,30 @@ const ContentModal: React.FC<ContentModalProps> = ({
                               </h3>
                             </div>
 
-                            <div className="p-4 flex-1 flex flex-col space-y-4 overflow-y-auto">
+                            <div className="flex flex-1 flex-col space-y-4 overflow-y-auto p-4">
                               <div className="space-y-2">
-                                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                                   Feedback e Alterações
                                 </label>
                                 <textarea
-                                  className="w-full h-48 lg:h-64 p-3 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-brand-primary text-sm resize-none"
+                                  className="h-48 w-full resize-none rounded-lg border border-gray-300 p-3 text-sm focus:border-brand-primary focus:ring-2 focus:ring-brand-primary dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 lg:h-64"
                                   placeholder="Descreva aqui os ajustes necessários para esta imagem..."
                                   value={formData.managerComments || ''}
-                                  onChange={e =>
+                                  onChange={(e) =>
                                     setFormData({ ...formData, managerComments: e.target.value })
                                   }
                                 />
                               </div>
 
-                              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-3 rounded-lg">
-                                <p className="text-[11px] text-amber-800 dark:text-amber-300 leading-relaxed">
+                              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-900/20">
+                                <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-300">
                                   <strong>Dica:</strong> Use este espaço para detalhar cores,
                                   textos ou elementos que precisam ser revisados na arte.
                                 </p>
                               </div>
                             </div>
 
-                            <div className="p-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+                            <div className="border-t border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-800/50">
                               <button
                                 type="button"
                                 onClick={() => {
@@ -381,7 +386,7 @@ const ContentModal: React.FC<ContentModalProps> = ({
                                     toast.success('Feedback registrado com sucesso!');
                                   }
                                 }}
-                                className="w-full py-2 bg-brand-primary hover:bg-brand-secondary text-white font-semibold rounded-lg transition-colors shadow-sm"
+                                className="w-full rounded-lg bg-brand-primary py-2 font-semibold text-white shadow-sm transition-colors hover:bg-brand-secondary"
                               >
                                 Concluir Revisão
                               </button>
@@ -394,9 +399,9 @@ const ContentModal: React.FC<ContentModalProps> = ({
                 )}
 
                 {formData.videoData && (
-                  <div className="relative rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 aspect-video p-3 flex flex-col justify-between">
+                  <div className="flex flex-col justify-between rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800 aspect-video">
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-brand-primary/10 flex items-center justify-center text-brand-primary flex-shrink-0">
+                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-brand-primary/10 text-brand-primary">
                         <Video size={18} />
                       </div>
 
@@ -404,22 +409,22 @@ const ContentModal: React.FC<ContentModalProps> = ({
                         <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                           Vídeo vinculado
                         </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 break-all mt-1">
+                        <p className="mt-1 break-all text-xs text-gray-500 dark:text-gray-400">
                           {formData.videoData}
                         </p>
                       </div>
                     </div>
 
                     {hasDirectVideoPreview ? (
-                      <div className="mt-3 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-black">
+                      <div className="mt-3 overflow-hidden rounded-lg border border-gray-200 bg-black dark:border-gray-700">
                         <video
                           src={formData.videoData}
                           controls
-                          className="w-full h-full object-contain"
+                          className="h-full w-full object-contain"
                         />
                       </div>
                     ) : (
-                      <div className="mt-3 text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-2.5">
+                      <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-700 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-400">
                         Pré-visualização interna indisponível para este tipo de link. Use os
                         botões abaixo para abrir ou copiar o vídeo.
                       </div>
@@ -430,7 +435,7 @@ const ContentModal: React.FC<ContentModalProps> = ({
                         href={formData.videoData}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-white bg-brand-primary hover:bg-brand-secondary rounded-lg transition-colors"
+                        className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-brand-primary px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-secondary"
                       >
                         <ExternalLink size={15} />
                         Abrir vídeo
@@ -439,7 +444,7 @@ const ContentModal: React.FC<ContentModalProps> = ({
                       <button
                         type="button"
                         onClick={handleCopyVideoLink}
-                        className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                        className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
                         title="Copiar link do vídeo"
                       >
                         <Copy size={15} />
@@ -452,39 +457,39 @@ const ContentModal: React.FC<ContentModalProps> = ({
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Título
             </label>
             <input
               type="text"
               required
-              className="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg shadow-sm focus:ring-brand-primary focus:border-brand-primary"
-              value={formData.title}
-              onChange={e => setFormData({ ...formData, title: e.target.value })}
+              className="w-full rounded-lg border-gray-300 shadow-sm focus:border-brand-primary focus:ring-brand-primary dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+              value={formData.title || ''}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Briefing
             </label>
             <textarea
               rows={3}
-              className="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg shadow-sm focus:ring-brand-primary focus:border-brand-primary"
-              value={formData.briefing}
-              onChange={e => setFormData({ ...formData, briefing: e.target.value })}
+              className="w-full rounded-lg border-gray-300 shadow-sm focus:border-brand-primary focus:ring-brand-primary dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+              value={formData.briefing || ''}
+              onChange={(e) => setFormData({ ...formData, briefing: e.target.value })}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Canal
               </label>
               <select
-                className="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg shadow-sm focus:ring-brand-primary focus:border-brand-primary"
-                value={formData.channel}
-                onChange={e => setFormData({ ...formData, channel: e.target.value })}
+                className="w-full rounded-lg border-gray-300 shadow-sm focus:border-brand-primary focus:ring-brand-primary dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                value={formData.channel || 'Instagram'}
+                onChange={(e) => setFormData({ ...formData, channel: e.target.value })}
               >
                 <option value="Instagram">Instagram</option>
                 <option value="TikTok">TikTok</option>
@@ -497,40 +502,42 @@ const ContentModal: React.FC<ContentModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Formato
               </label>
               <input
                 type="text"
-                className="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg shadow-sm focus:ring-brand-primary focus:border-brand-primary"
-                value={formData.format}
-                onChange={e => setFormData({ ...formData, format: e.target.value })}
+                className="w-full rounded-lg border-gray-300 shadow-sm focus:border-brand-primary focus:ring-brand-primary dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                value={formData.format || 'Post'}
+                onChange={(e) => setFormData({ ...formData, format: e.target.value })}
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Data de Publicação
               </label>
               <input
                 type="date"
                 required
-                className="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg shadow-sm focus:ring-brand-primary focus:border-brand-primary"
-                value={formData.publishDate?.split('T')[0]}
-                onChange={e => setFormData({ ...formData, publishDate: e.target.value })}
+                className="w-full rounded-lg border-gray-300 shadow-sm focus:border-brand-primary focus:ring-brand-primary dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                value={formData.publishDate?.split('T')[0] || ''}
+                onChange={(e) => setFormData({ ...formData, publishDate: e.target.value })}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Status
               </label>
               <select
-                className="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg shadow-sm focus:ring-brand-primary focus:border-brand-primary"
-                value={formData.status}
-                onChange={e => setFormData({ ...formData, status: e.target.value as any })}
+                className="w-full rounded-lg border-gray-300 shadow-sm focus:border-brand-primary focus:ring-brand-primary dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                value={formData.status || initialStatus}
+                onChange={(e) =>
+                  setFormData({ ...formData, status: e.target.value as Content['status'] })
+                }
               >
                 <option value="Ideia">Ideia</option>
                 <option value="Produção">Produção</option>
@@ -542,23 +549,23 @@ const ContentModal: React.FC<ContentModalProps> = ({
             </div>
           </div>
 
-          <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-gray-800">
-            <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+          <div className="space-y-4 border-t border-gray-100 pt-4 dark:border-gray-800">
+            <h4 className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
               <Upload size={16} className="text-brand-primary" />
               Anexos e Mídia
             </h4>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                   Imagem
                 </label>
 
                 {formData.imageData ? (
-                  <div className="flex items-center justify-between p-2.5 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-2.5 dark:border-gray-700 dark:bg-gray-800/50">
                     <div className="flex items-center gap-2 overflow-hidden">
-                      <ImageIcon size={16} className="text-brand-primary flex-shrink-0" />
-                      <span className="text-sm text-gray-700 dark:text-gray-300 truncate">
+                      <ImageIcon size={16} className="flex-shrink-0 text-brand-primary" />
+                      <span className="truncate text-sm text-gray-700 dark:text-gray-300">
                         {formData.imageName || 'Imagem enviada'}
                       </span>
                     </div>
@@ -566,19 +573,19 @@ const ContentModal: React.FC<ContentModalProps> = ({
                     <button
                       type="button"
                       onClick={() => removeFile('image')}
-                      className="text-red-500 hover:text-red-600 p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
+                      className="rounded-md p-1.5 text-red-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20"
                     >
                       <Trash2 size={14} />
                     </button>
                   </div>
                 ) : (
-                  <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-brand-primary/5 hover:border-brand-primary/50 transition-colors group">
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                  <label className="group flex h-24 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 transition-colors hover:border-brand-primary/50 hover:bg-brand-primary/5 dark:border-gray-700">
+                    <div className="flex flex-col items-center justify-center pb-6 pt-5">
                       <Upload
                         size={20}
-                        className="text-gray-400 group-hover:text-brand-primary mb-2 transition-colors"
+                        className="mb-2 text-gray-400 transition-colors group-hover:text-brand-primary"
                       />
-                      <p className="text-xs text-gray-500 dark:text-gray-400 group-hover:text-brand-primary transition-colors">
+                      <p className="text-xs text-gray-500 transition-colors group-hover:text-brand-primary dark:text-gray-400">
                         Upload de imagem
                       </p>
                     </div>
@@ -593,23 +600,23 @@ const ContentModal: React.FC<ContentModalProps> = ({
               </div>
 
               <div className="space-y-2">
-                <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                   Vídeo
                 </label>
 
                 <div className="space-y-2">
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                       <Video size={16} className="text-gray-400" />
                     </div>
 
                     <input
                       type="url"
                       placeholder="Cole aqui o link do vídeo no OneDrive"
-                      className="w-full pl-10 pr-10 border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg shadow-sm focus:ring-brand-primary focus:border-brand-primary text-sm"
+                      className="w-full rounded-lg border-gray-300 pl-10 pr-10 text-sm shadow-sm focus:border-brand-primary focus:ring-brand-primary dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                       value={formData.videoData || ''}
-                      onChange={e =>
-                        setFormData(prev => ({
+                      onChange={(e) =>
+                        setFormData((prev) => ({
                           ...prev,
                           videoData: e.target.value,
                           videoName: e.target.value ? 'Vídeo via OneDrive' : '',
@@ -621,7 +628,7 @@ const ContentModal: React.FC<ContentModalProps> = ({
                       <button
                         type="button"
                         onClick={() => removeFile('video')}
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-red-500 hover:text-red-600"
+                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-red-500 hover:text-red-600"
                         title="Remover link do vídeo"
                       >
                         <Trash2 size={14} />
@@ -629,8 +636,8 @@ const ContentModal: React.FC<ContentModalProps> = ({
                     )}
                   </div>
 
-                  <div className="rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 p-3">
-                    <p className="text-xs text-blue-800 dark:text-blue-300 leading-relaxed">
+                  <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-900/20">
+                    <p className="text-xs leading-relaxed text-blue-800 dark:text-blue-300">
                       Suba o vídeo no <strong>OneDrive/SharePoint</strong> e cole aqui o link de
                       compartilhamento.
                     </p>
@@ -642,7 +649,7 @@ const ContentModal: React.FC<ContentModalProps> = ({
                         href={formData.videoData}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-white bg-brand-primary hover:bg-brand-secondary rounded-lg transition-colors"
+                        className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-brand-primary px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-secondary"
                       >
                         <ExternalLink size={15} />
                         Abrir vídeo
@@ -651,7 +658,7 @@ const ContentModal: React.FC<ContentModalProps> = ({
                       <button
                         type="button"
                         onClick={handleCopyVideoLink}
-                        className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                        className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
                       >
                         <Copy size={15} />
                       </button>
@@ -662,43 +669,43 @@ const ContentModal: React.FC<ContentModalProps> = ({
             </div>
 
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                 <LinkIcon size={16} className="text-gray-400" />
               </div>
               <input
                 type="url"
                 placeholder="Link Externo / Referência"
-                className="w-full pl-10 border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg shadow-sm focus:ring-brand-primary focus:border-brand-primary text-sm"
+                className="w-full rounded-lg border-gray-300 pl-10 text-sm shadow-sm focus:border-brand-primary focus:ring-brand-primary dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                 value={formData.externalLink || ''}
-                onChange={e => setFormData({ ...formData, externalLink: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, externalLink: e.target.value })}
               />
             </div>
           </div>
 
-          <div className="p-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/50 rounded-lg space-y-3">
-            <label className="block text-xs font-bold text-amber-800 dark:text-amber-400 uppercase tracking-wider flex items-center gap-2">
+          <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800/50 dark:bg-amber-900/10">
+            <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-800 dark:text-amber-400">
               <ImageIcon size={14} />
               Ajustes e Feedback
             </label>
             <textarea
               rows={3}
-              className="w-full border-amber-300 dark:border-amber-700/50 bg-white dark:bg-gray-900 dark:text-gray-100 rounded-lg shadow-sm focus:ring-amber-500 focus:border-amber-500 text-sm resize-none placeholder-amber-300 dark:placeholder-amber-700/50"
+              className="w-full resize-none rounded-lg border-amber-300 bg-white text-sm shadow-sm placeholder-amber-300 focus:border-amber-500 focus:ring-amber-500 dark:border-amber-700/50 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-amber-700/50"
               placeholder="Descreva aqui os ajustes necessários ou feedback sobre o conteúdo..."
               value={formData.managerComments || ''}
-              onChange={e => setFormData({ ...formData, managerComments: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, managerComments: e.target.value })}
             />
           </div>
 
           {formData.status === 'Publicado' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Link do Post Publicado
               </label>
               <input
                 type="url"
-                className="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg shadow-sm focus:ring-brand-primary focus:border-brand-primary"
+                className="w-full rounded-lg border-gray-300 shadow-sm focus:border-brand-primary focus:ring-brand-primary dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                 value={formData.publishedPostLink || ''}
-                onChange={e => setFormData({ ...formData, publishedPostLink: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, publishedPostLink: e.target.value })}
                 placeholder="https://..."
               />
             </div>
@@ -708,16 +715,16 @@ const ContentModal: React.FC<ContentModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isSaving}
-              className="px-4 py-2 text-sm font-medium text-white bg-brand-primary hover:bg-brand-secondary rounded-lg shadow-sm transition-colors disabled:opacity-50"
+              className="rounded-lg bg-brand-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-secondary disabled:opacity-50"
             >
-              {isSaving ? 'Salvando...' : contentToEdit ? 'Salvar Alterações' : 'Criar Conteúdo'}
+              {isSaving ? 'Salvando...' : isEditing ? 'Salvar Alterações' : 'Criar Conteúdo'}
             </button>
           </div>
         </form>
