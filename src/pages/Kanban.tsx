@@ -1,5 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
+import React, { useEffect, useState } from 'react';
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+  type DropResult,
+} from '@hello-pangea/dnd';
 import { useAppContext } from '../store';
 import { Content } from '../types';
 import {
@@ -22,18 +27,52 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import toast from 'react-hot-toast';
 import ContentModal from '../components/ContentModal';
 import { parseSafeDate } from '../utils/date';
 import { supabase } from '../lib/supabase';
 
-const columns: { id: Content['status']; title: string; icon: React.ReactNode; color: string }[] = [
-  { id: 'Ideia', title: 'Ideias', icon: <Zap size={18} />, color: 'text-amber-500 bg-amber-50 dark:bg-amber-900/20' },
-  { id: 'Produção', title: 'Em Produção', icon: <Clock size={18} />, color: 'text-blue-500 bg-blue-50 dark:bg-blue-900/20' },
-  { id: 'Revisão', title: 'Em Revisão', icon: <Eye size={18} />, color: 'text-yellow-500 bg-yellow-50 dark:bg-yellow-900/20' },
-  { id: 'Aprovado', title: 'Aprovados', icon: <CheckCircle2 size={18} />, color: 'text-purple-500 bg-purple-50 dark:bg-purple-900/20' },
-  { id: 'Agendado', title: 'Agendados', icon: <Calendar size={18} />, color: 'text-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' },
-  { id: 'Publicado', title: 'Publicados', icon: <MessageSquare size={18} />, color: 'text-sky-500 bg-sky-50 dark:bg-sky-900/20' },
+const columns: {
+  id: Content['status'];
+  title: string;
+  icon: React.ReactNode;
+  color: string;
+}[] = [
+  {
+    id: 'Ideia',
+    title: 'Ideias',
+    icon: <Zap size={18} />,
+    color: 'text-amber-500 bg-amber-50 dark:bg-amber-900/20',
+  },
+  {
+    id: 'Produção',
+    title: 'Em Produção',
+    icon: <Clock size={18} />,
+    color: 'text-blue-500 bg-blue-50 dark:bg-blue-900/20',
+  },
+  {
+    id: 'Revisão',
+    title: 'Em Revisão',
+    icon: <Eye size={18} />,
+    color: 'text-yellow-500 bg-yellow-50 dark:bg-yellow-900/20',
+  },
+  {
+    id: 'Aprovado',
+    title: 'Aprovados',
+    icon: <CheckCircle2 size={18} />,
+    color: 'text-purple-500 bg-purple-50 dark:bg-purple-900/20',
+  },
+  {
+    id: 'Agendado',
+    title: 'Agendados',
+    icon: <Calendar size={18} />,
+    color: 'text-indigo-500 bg-indigo-50 dark:bg-indigo-900/20',
+  },
+  {
+    id: 'Publicado',
+    title: 'Publicados',
+    icon: <MessageSquare size={18} />,
+    color: 'text-sky-500 bg-sky-50 dark:bg-sky-900/20',
+  },
 ];
 
 const getChannelIcon = (channel: string) => {
@@ -57,6 +96,7 @@ const getChannelIcon = (channel: string) => {
 
 const Kanban: React.FC = () => {
   const { contents, updateContent, deleteContent } = useAppContext();
+
   const [boardData, setBoardData] = useState<Record<Content['status'], Content[]>>({
     Ideia: [],
     Produção: [],
@@ -65,10 +105,9 @@ const Kanban: React.FC = () => {
     Agendado: [],
     Publicado: [],
   });
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedContent, setSelectedContent] = useState<Content | undefined>(undefined);
-  const [initialStatus, setInitialStatus] = useState<Content['status']>('Ideia');
-  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   useEffect(() => {
     const newBoardData: Record<Content['status'], Content[]> = {
@@ -80,104 +119,103 @@ const Kanban: React.FC = () => {
       Publicado: [],
     };
 
-    contents.forEach((c) => {
-      if (newBoardData[c.status]) {
-        newBoardData[c.status].push(c);
+    contents.forEach((content) => {
+      if (newBoardData[content.status]) {
+        newBoardData[content.status].push(content);
       }
     });
 
     setBoardData(newBoardData);
   }, [contents]);
 
-  const onDragEnd = async (result: DropResult) => {
+  const onDragEnd = (result: DropResult) => {
     const { source, destination, draggableId } = result;
 
     if (!destination) return;
 
-    if (source.droppableId === destination.droppableId && source.index === destination.index) {
+    if (
+      source.droppableId === destination.droppableId &&
+      source.index === destination.index
+    ) {
       return;
     }
 
-    const destColumn = destination.droppableId as Content['status'];
-    const contentToMove = contents.find((c) => c.id === draggableId);
+    const newStatus = destination.droppableId as Content['status'];
+    const contentToMove = contents.find((item) => item.id === draggableId);
 
     if (!contentToMove) return;
-    if (contentToMove.status === destColumn) return;
-    if (isUpdatingStatus) return;
 
-    const previousStatus = contentToMove.status;
-    const updatedContent = { ...contentToMove, status: destColumn };
+    const updatedContent: Content = {
+      ...contentToMove,
+      status: newStatus,
+    };
 
     updateContent(updatedContent);
-    setIsUpdatingStatus(true);
-
-    try {
-      const { error } = await supabase
-        .from('contents')
-        .update({ status: destColumn })
-        .eq('id', draggableId);
-
-      if (error) {
-        updateContent({ ...contentToMove, status: previousStatus });
-        console.error(error);
-        toast.error('Não foi possível atualizar o status.');
-        return;
-      }
-
-      toast.success(`Status alterado para ${destColumn}.`);
-    } catch (error) {
-      updateContent({ ...contentToMove, status: previousStatus });
-      console.error(error);
-      toast.error('Ocorreu um erro ao mover o conteúdo.');
-    } finally {
-      setIsUpdatingStatus(false);
-    }
   };
 
-  const handleAddClick = (status: Content['status'] = 'Ideia') => {
+  const handleAddClick = () => {
     setSelectedContent(undefined);
-    setInitialStatus(status);
     setIsModalOpen(true);
   };
 
   const handleEditClick = (content: Content) => {
     setSelectedContent(content);
-    setInitialStatus(content.status);
     setIsModalOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    if (window.confirm('Tem certeza que deseja excluir este conteúdo?')) {
+  const handleDelete = async (id: string) => {
+    const confirmed = window.confirm('Tem certeza que deseja excluir este conteúdo?');
+    if (!confirmed) return;
+
+    try {
+      const { error } = await supabase.from('contents').delete().eq('id', id);
+
+      if (error) {
+        console.error('Erro ao excluir conteúdo:', error);
+        alert('Erro ao excluir conteúdo.');
+        return;
+      }
+
       deleteContent(id);
+    } catch (error) {
+      console.error('Erro inesperado ao excluir conteúdo:', error);
+      alert('Erro inesperado ao excluir conteúdo.');
     }
   };
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Kanban de Conteúdos</h1>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          Kanban de Conteúdos
+        </h1>
+
         <button
-          onClick={() => handleAddClick('Ideia')}
-          className="bg-brand-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-brand-secondary transition-colors flex items-center gap-2 shadow-sm"
+          onClick={handleAddClick}
+          className="flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2 font-medium text-white shadow-sm transition-colors hover:bg-brand-secondary"
         >
-          <Plus size={20} /> Novo Conteúdo
+          <Plus size={20} />
+          Novo Conteúdo
         </button>
       </div>
 
       <div className="flex-1 overflow-x-auto pb-4">
         <DragDropContext onDragEnd={onDragEnd}>
-          <div className="flex gap-6 h-full items-start">
+          <div className="flex h-full items-start gap-6">
             {columns.map((column) => (
               <div
                 key={column.id}
-                className="w-80 flex-shrink-0 flex flex-col bg-gray-100/50 dark:bg-gray-800/30 rounded-xl h-full max-h-full overflow-hidden border border-gray-200 dark:border-gray-800"
+                className="flex h-full max-h-full w-80 flex-shrink-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-gray-100/50 dark:border-gray-800 dark:bg-gray-800/30"
               >
-                <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-white dark:bg-gray-900 rounded-t-xl">
+                <div className="flex items-center justify-between rounded-t-xl border-b border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
                   <div className="flex items-center gap-2">
-                    <span className={`p-1.5 rounded-lg ${column.color}`}>{column.icon}</span>
-                    <h3 className="font-bold text-gray-800 dark:text-gray-200 text-sm">{column.title}</h3>
+                    <span className={`rounded-lg p-1.5 ${column.color}`}>{column.icon}</span>
+                    <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200">
+                      {column.title}
+                    </h3>
                   </div>
-                  <span className="bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-[10px] font-bold px-2 py-0.5 rounded-full">
+
+                  <span className="rounded-full bg-gray-200 px-2 py-0.5 text-[10px] font-bold text-gray-600 dark:bg-gray-700 dark:text-gray-400">
                     {boardData[column.id].length}
                   </span>
                 </div>
@@ -185,51 +223,47 @@ const Kanban: React.FC = () => {
                 <Droppable droppableId={column.id}>
                   {(provided, snapshot) => (
                     <div
-                      {...provided.droppableProps}
                       ref={provided.innerRef}
-                      className={`flex-1 overflow-y-auto p-3 space-y-4 transition-colors ${
+                      {...provided.droppableProps}
+                      className={`custom-scrollbar flex-1 space-y-4 overflow-y-auto p-3 transition-colors ${
                         snapshot.isDraggingOver ? 'bg-brand-primary/5' : ''
-                      } custom-scrollbar`}
+                      }`}
                     >
                       {boardData[column.id].length === 0 && !snapshot.isDraggingOver && (
-                        <button
-                          type="button"
-                          onClick={() => handleAddClick(column.id)}
-                          className="h-32 w-full flex flex-col items-center justify-center border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-xl bg-white/50 dark:bg-gray-900/50 hover:border-brand-primary hover:bg-brand-primary/5 transition-colors"
-                        >
-                          <Plus size={24} className="text-gray-300 dark:text-gray-700 mb-2" />
+                        <div className="flex h-32 flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 bg-white/50 dark:border-gray-800 dark:bg-gray-900/50">
+                          <Plus size={24} className="mb-2 text-gray-300 dark:text-gray-700" />
                           <span className="text-xs text-gray-400 dark:text-gray-500">
                             Arraste ou crie aqui
                           </span>
-                        </button>
+                        </div>
                       )}
 
-                      {boardData[column.id].map((content, index) => {
-                        return (
-                          <Draggable key={content.id} draggableId={content.id} index={index}>
+                      {boardData[column.id].map((content, index) => (
+                        <React.Fragment key={content.id}>
+                          <Draggable draggableId={content.id} index={index}>
                             {(provided, snapshot) => (
                               <div
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
                                 {...provided.dragHandleProps}
                                 onClick={() => handleEditClick(content)}
-                                className={`bg-white dark:bg-gray-900 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 group hover:border-brand-primary transition-all cursor-pointer flex flex-col ${
+                                className={`group flex cursor-pointer flex-col rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all hover:border-brand-primary dark:border-gray-800 dark:bg-gray-900 ${
                                   snapshot.isDragging
-                                    ? 'shadow-2xl ring-2 ring-brand-primary ring-opacity-50 rotate-2'
+                                    ? 'rotate-2 ring-2 ring-brand-primary ring-opacity-50 shadow-2xl'
                                     : 'hover:shadow-md'
                                 }`}
                               >
-                                <div className="flex justify-between items-start mb-3">
+                                <div className="mb-3 flex items-start justify-between">
                                   <div className="flex flex-wrap gap-2">
                                     <span
-                                      className={`flex items-center gap-1.5 text-[10px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider ${
+                                      className={`flex items-center gap-1.5 rounded-lg px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${
                                         content.channel === 'Instagram'
-                                          ? 'bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400'
+                                          ? 'bg-pink-50 text-pink-600 dark:bg-pink-900/20 dark:text-pink-400'
                                           : content.channel === 'TikTok'
-                                            ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
-                                            : content.channel === 'Blog'
-                                              ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                              : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                                          ? 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                                          : content.channel === 'Blog'
+                                          ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400'
+                                          : 'bg-gray-50 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
                                       }`}
                                     >
                                       {getChannelIcon(content.channel)}
@@ -239,78 +273,90 @@ const Kanban: React.FC = () => {
 
                                   <div className="flex items-center gap-1">
                                     <button
+                                      type="button"
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         handleDelete(content.id);
                                       }}
-                                      className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                                      className="rounded p-1 text-gray-400 opacity-0 transition-opacity hover:bg-red-50 hover:text-red-500 group-hover:opacity-100 dark:hover:bg-red-900/20"
                                       title="Excluir"
                                     >
                                       <Trash2 size={14} />
                                     </button>
 
-                                    <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded">
+                                    <button
+                                      type="button"
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="rounded p-1 text-gray-400 opacity-0 transition-opacity hover:bg-gray-100 hover:text-gray-600 group-hover:opacity-100 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+                                      title="Mais opções"
+                                    >
                                       <MoreHorizontal size={14} />
                                     </button>
                                   </div>
                                 </div>
 
                                 {content.imageData ? (
-                                  <div className="mb-4 rounded-lg overflow-hidden border border-gray-100 dark:border-gray-800 aspect-[4/3] w-full bg-gray-50 dark:bg-gray-800 relative group-hover:border-brand-primary/30 transition-colors">
+                                  <div className="relative mb-4 aspect-[4/3] w-full overflow-hidden rounded-lg border border-gray-100 bg-gray-50 transition-colors group-hover:border-brand-primary/30 dark:border-gray-800 dark:bg-gray-800">
                                     <img
                                       src={content.imageData}
                                       alt=""
-                                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                                       referrerPolicy="no-referrer"
                                     />
-                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                                    <div className="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/10" />
                                   </div>
                                 ) : content.videoData ? (
-                                  <div className="mb-4 rounded-lg overflow-hidden border border-gray-100 dark:border-gray-800 aspect-[4/3] w-full bg-gray-50 dark:bg-gray-800 relative group-hover:border-brand-primary/30 transition-colors">
+                                  <div className="relative mb-4 aspect-[4/3] w-full overflow-hidden rounded-lg border border-gray-100 bg-gray-50 transition-colors group-hover:border-brand-primary/30 dark:border-gray-800 dark:bg-gray-800">
                                     <video
                                       src={content.videoData}
-                                      className="w-full h-full object-cover"
+                                      className="h-full w-full object-cover"
                                       muted
                                       playsInline
                                       preload="metadata"
                                     />
-                                    <div className="absolute top-2 right-2 bg-black/70 text-white rounded-full p-1">
+                                    <div className="absolute right-2 top-2 rounded-full bg-black/70 p-1 text-white">
                                       <Video size={14} />
                                     </div>
                                   </div>
                                 ) : (
-                                  <div className="mb-4 rounded-lg border border-gray-100 dark:border-gray-800 aspect-[4/3] w-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-300 dark:text-gray-700">
+                                  <div className="mb-4 flex aspect-[4/3] w-full items-center justify-center rounded-lg border border-gray-100 bg-gray-50 text-gray-300 dark:border-gray-800 dark:bg-gray-800 dark:text-gray-700">
                                     <Zap size={32} strokeWidth={1.5} />
                                   </div>
                                 )}
 
-                                <h4 className="text-base font-bold text-gray-900 dark:text-gray-100 mb-3 line-clamp-2 leading-snug group-hover:text-brand-primary transition-colors">
+                                <h4 className="mb-3 line-clamp-2 text-base font-bold leading-snug text-gray-900 transition-colors group-hover:text-brand-primary dark:text-gray-100">
                                   {content.title}
                                 </h4>
 
-                                <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-100 dark:border-gray-800">
+                                <div className="mt-auto flex items-center justify-between border-t border-gray-100 pt-3 dark:border-gray-800">
                                   <div className="flex items-center gap-2">
-                                    <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 px-2 py-0.5 rounded border border-gray-100 dark:border-gray-700">
+                                    <span className="rounded border border-gray-100 bg-gray-50 px-2 py-0.5 text-[10px] font-semibold text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
                                       {content.format}
                                     </span>
+
                                     {content.managerComments && (
-                                      <div className="w-2 h-2 rounded-full bg-amber-500" title="Comentários do gestor" />
+                                      <div
+                                        className="h-2 w-2 rounded-full bg-amber-500"
+                                        title="Comentários do gestor"
+                                      />
                                     )}
                                   </div>
 
                                   <div
-                                    className="flex items-center gap-1.5 text-gray-400 dark:text-gray-500 text-[10px] font-medium"
+                                    className="flex items-center gap-1.5 text-[10px] font-medium text-gray-400 dark:text-gray-500"
                                     title="Data de Publicação"
                                   >
                                     <Calendar size={12} />
-                                    {format(parseSafeDate(content.publishDate), 'dd MMM', { locale: ptBR })}
+                                    {format(parseSafeDate(content.publishDate), 'dd MMM', {
+                                      locale: ptBR,
+                                    })}
                                   </div>
                                 </div>
                               </div>
                             )}
                           </Draggable>
-                        );
-                      })}
+                        </React.Fragment>
+                      ))}
 
                       {provided.placeholder}
                     </div>
@@ -326,7 +372,6 @@ const Kanban: React.FC = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         contentToEdit={selectedContent}
-        initialStatus={initialStatus}
       />
     </div>
   );
