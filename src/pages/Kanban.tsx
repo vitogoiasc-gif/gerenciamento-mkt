@@ -158,6 +158,11 @@ const Kanban: React.FC = () => {
     setIsModalOpen(true);
   };
 
+  const handleAddClickByColumn = (status: Content['status']) => {
+    setSelectedContent({ status } as Content);
+    setIsModalOpen(true);
+  };
+
   const handleEditClick = (content: Content) => {
     setSelectedContent(content);
     setIsModalOpen(true);
@@ -230,7 +235,10 @@ const Kanban: React.FC = () => {
                       }`}
                     >
                       {boardData[column.id].length === 0 && !snapshot.isDraggingOver && (
-                        <div className="flex h-32 flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 bg-white/50 dark:border-gray-800 dark:bg-gray-900/50">
+                        <div
+                          onClick={() => handleAddClickByColumn(column.id)}
+                          className="flex h-32 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 bg-white/50 transition-all hover:border-brand-primary hover:bg-brand-primary/5 dark:border-gray-800 dark:bg-gray-900/50"
+                        >
                           <Plus size={24} className="mb-2 text-gray-300 dark:text-gray-700" />
                           <span className="text-xs text-gray-400 dark:text-gray-500">
                             Arraste ou crie aqui
