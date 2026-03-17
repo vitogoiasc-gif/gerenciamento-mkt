@@ -128,7 +128,7 @@ const Kanban: React.FC = () => {
     setBoardData(newBoardData);
   }, [contents]);
 
-  const onDragEnd = (result: DropResult) => {
+  const onDragEnd = async (result: DropResult) => {
     const { source, destination, draggableId } = result;
 
     if (!destination) return;
@@ -145,12 +145,43 @@ const Kanban: React.FC = () => {
 
     if (!contentToMove) return;
 
+    const previousStatus = contentToMove.status;
+
     const updatedContent: Content = {
       ...contentToMove,
       status: newStatus,
     };
 
     updateContent(updatedContent);
+
+    try {
+      const { error } = await supabase
+        .from('contents')
+        .update({
+          status: newStatus,
+        })
+        .eq('id', draggableId);
+
+      if (error) {
+        console.error('Erro ao atualizar status no kanban:', error);
+
+        updateContent({
+          ...contentToMove,
+          status: previousStatus,
+        });
+
+        alert('Erro ao mover conteúdo. O status não foi salvo.');
+      }
+    } catch (error) {
+      console.error('Erro inesperado ao mover conteúdo:', error);
+
+      updateContent({
+        ...contentToMove,
+        status: previousStatus,
+      });
+
+      alert('Erro inesperado ao mover conteúdo.');
+    }
   };
 
   const handleAddClick = () => {
