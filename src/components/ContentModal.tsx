@@ -19,9 +19,15 @@ interface ContentModalProps {
   isOpen: boolean;
   onClose: () => void;
   contentToEdit?: Content;
+  initialStatus?: Content['status'];
 }
 
-const ContentModal: React.FC<ContentModalProps> = ({ isOpen, onClose, contentToEdit }) => {
+const ContentModal: React.FC<ContentModalProps> = ({
+  isOpen,
+  onClose,
+  contentToEdit,
+  initialStatus = 'Ideia',
+}) => {
   const { addContent, updateContent } = useAppContext();
   const [isImageExpanded, setIsImageExpanded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -32,7 +38,7 @@ const ContentModal: React.FC<ContentModalProps> = ({ isOpen, onClose, contentToE
     channel: 'Instagram',
     format: 'Post',
     publishDate: new Date().toISOString().split('T')[0],
-    status: 'Ideia',
+    status: initialStatus,
     publishedPostLink: null,
     imageData: '',
     imageName: '',
@@ -75,7 +81,7 @@ const ContentModal: React.FC<ContentModalProps> = ({ isOpen, onClose, contentToE
         channel: 'Instagram',
         format: 'Post',
         publishDate: new Date().toISOString().split('T')[0],
-        status: 'Ideia',
+        status: initialStatus,
         publishedPostLink: null,
         imageData: '',
         imageName: '',
@@ -85,7 +91,7 @@ const ContentModal: React.FC<ContentModalProps> = ({ isOpen, onClose, contentToE
         managerComments: '',
       });
     }
-  }, [contentToEdit, isOpen]);
+  }, [contentToEdit, isOpen, initialStatus]);
 
   if (!isOpen) return null;
 

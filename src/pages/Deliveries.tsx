@@ -1,7 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAppContext } from '../store';
 import { format, startOfWeek, endOfWeek, isWithinInterval, addDays } from 'date-fns';
-import { FileText, ExternalLink, Save, Calendar as CalendarIcon, ChevronLeft, ChevronRight, RotateCcw, Download } from 'lucide-react';
+import {
+  FileText,
+  ExternalLink,
+  Save,
+  Calendar as CalendarIcon,
+  ChevronLeft,
+  ChevronRight,
+  RotateCcw,
+  Download,
+} from 'lucide-react';
 import { parseSafeDate } from '../utils/date';
 import * as XLSX from 'xlsx';
 import { supabase } from '../lib/supabase';
@@ -72,7 +81,7 @@ const Deliveries: React.FC = () => {
           {
             week_start: formattedWeekStart,
             summary: summaryText,
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
           },
           { onConflict: 'week_start' }
         );
@@ -95,20 +104,20 @@ const Deliveries: React.FC = () => {
 
   const handleExportExcel = () => {
     const contentsData = contents.map(c => ({
-      'ID': c.id,
-      'Título': c.title,
-      'Canal': c.channel,
-      'Formato': c.format,
-      'Status': c.status,
+      ID: c.id,
+      Título: c.title,
+      Canal: c.channel,
+      Formato: c.format,
+      Status: c.status,
       'Data de Publicação': format(parseSafeDate(c.publishDate), 'dd/MM/yyyy'),
-      'Briefing': c.briefing,
+      Briefing: c.briefing,
       'Link do Post': c.publishedPostLink || 'N/A',
-      'Feedback do Gestor': c.managerComments || ''
+      'Feedback do Gestor': c.managerComments || '',
     }));
 
     const summariesData = summaries.map(s => ({
       'Semana Início': s.weekStart,
-      'Resumo': s.text
+      Resumo: s.text,
     }));
 
     const wb = XLSX.utils.book_new();
@@ -124,7 +133,9 @@ const Deliveries: React.FC = () => {
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Entregas & Relatórios</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          Entregas & Relatórios
+        </h1>
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={handleExportExcel}
@@ -187,25 +198,40 @@ const Deliveries: React.FC = () => {
               {publishedThisWeek.map(content => (
                 <div
                   key={content.id}
-                  className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors flex justify-between items-center"
+                  className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors flex justify-between items-center gap-4"
                 >
                   <div>
-                    <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">{content.title}</h4>
+                    <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                      {content.title}
+                    </h4>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       {content.channel} • {content.format}
                     </p>
                   </div>
 
-                  {content.publishedPostLink && (
-                    <a
-                      href={content.publishedPostLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-brand-primary hover:text-brand-secondary flex items-center gap-1 text-xs font-medium"
-                    >
-                      Ver Post <ExternalLink size={14} />
-                    </a>
-                  )}
+                  <div className="flex flex-col items-end gap-2">
+                    {content.externalLink && (
+                      <a
+                        href={content.externalLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-medium text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100 flex items-center gap-1"
+                      >
+                        Link Externo <ExternalLink size={14} />
+                      </a>
+                    )}
+
+                    {content.publishedPostLink && (
+                      <a
+                        href={content.publishedPostLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-brand-primary hover:text-brand-secondary flex items-center gap-1 text-xs font-medium"
+                      >
+                        Ver Post <ExternalLink size={14} />
+                      </a>
+                    )}
+                  </div>
                 </div>
               ))}
 
@@ -246,9 +272,7 @@ const Deliveries: React.FC = () => {
               </p>
 
               {isLoadingSummary && (
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Carregando resumo...
-                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Carregando resumo...</p>
               )}
             </div>
           </section>

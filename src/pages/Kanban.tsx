@@ -2,11 +2,30 @@ import React, { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { useAppContext } from '../store';
 import { Content } from '../types';
-import { Calendar, MoreHorizontal, Plus, Instagram, Youtube, Linkedin, Mail, FileText, Music, MessageSquare, Clock, CheckCircle2, Eye, Zap, Trash2, Video } from 'lucide-react';
+import {
+  Calendar,
+  MoreHorizontal,
+  Plus,
+  Instagram,
+  Youtube,
+  Linkedin,
+  Mail,
+  FileText,
+  Music,
+  MessageSquare,
+  Clock,
+  CheckCircle2,
+  Eye,
+  Zap,
+  Trash2,
+  Video,
+} from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import toast from 'react-hot-toast';
 import ContentModal from '../components/ContentModal';
 import { parseSafeDate } from '../utils/date';
+import { supabase } from '../lib/supabase';
 
 const columns: { id: Content['status']; title: string; icon: React.ReactNode; color: string }[] = [
   { id: 'Ideia', title: 'Ideias', icon: <Zap size={18} />, color: 'text-amber-500 bg-amber-50 dark:bg-amber-900/20' },
@@ -19,13 +38,20 @@ const columns: { id: Content['status']; title: string; icon: React.ReactNode; co
 
 const getChannelIcon = (channel: string) => {
   switch (channel) {
-    case 'Instagram': return <Instagram size={14} />;
-    case 'TikTok': return <Music size={14} />;
-    case 'YouTube': return <Youtube size={14} />;
-    case 'LinkedIn': return <Linkedin size={14} />;
-    case 'Email': return <Mail size={14} />;
-    case 'Blog': return <FileText size={14} />;
-    default: return <MessageSquare size={14} />;
+    case 'Instagram':
+      return <Instagram size={14} />;
+    case 'TikTok':
+      return <Music size={14} />;
+    case 'YouTube':
+      return <Youtube size={14} />;
+    case 'LinkedIn':
+      return <Linkedin size={14} />;
+    case 'Email':
+      return <Mail size={14} />;
+    case 'Blog':
+      return <FileText size={14} />;
+    default:
+      return <MessageSquare size={14} />;
   }
 };
 
@@ -41,6 +67,8 @@ const Kanban: React.FC = () => {
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedContent, setSelectedContent] = useState<Content | undefined>(undefined);
+  const [initialStatus, setInitialStatus] = useState<Content['status']>('Ideia');
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   useEffect(() => {
     const newBoardData: Record<Content['status'], Content[]> = {
@@ -61,26 +89,60 @@ const Kanban: React.FC = () => {
     setBoardData(newBoardData);
   }, [contents]);
 
-  const onDragEnd = (result: DropResult) => {
+  const onDragEnd = async (result: DropResult) => {
     const { source, destination, draggableId } = result;
+
     if (!destination) return;
-    if (source.droppableId === destination.droppableId && source.index === destination.index) return;
+
+    if (source.droppableId === destination.droppableId && source.index === destination.index) {
+      return;
+    }
 
     const destColumn = destination.droppableId as Content['status'];
     const contentToMove = contents.find((c) => c.id === draggableId);
-    if (!contentToMove) return;
 
+    if (!contentToMove) return;
+    if (contentToMove.status === destColumn) return;
+    if (isUpdatingStatus) return;
+
+    const previousStatus = contentToMove.status;
     const updatedContent = { ...contentToMove, status: destColumn };
+
     updateContent(updatedContent);
+    setIsUpdatingStatus(true);
+
+    try {
+      const { error } = await supabase
+        .from('contents')
+        .update({ status: destColumn })
+        .eq('id', draggableId);
+
+      if (error) {
+        updateContent({ ...contentToMove, status: previousStatus });
+        console.error(error);
+        toast.error('Não foi possível atualizar o status.');
+        return;
+      }
+
+      toast.success(`Status alterado para ${destColumn}.`);
+    } catch (error) {
+      updateContent({ ...contentToMove, status: previousStatus });
+      console.error(error);
+      toast.error('Ocorreu um erro ao mover o conteúdo.');
+    } finally {
+      setIsUpdatingStatus(false);
+    }
   };
 
-  const handleAddClick = () => {
+  const handleAddClick = (status: Content['status'] = 'Ideia') => {
     setSelectedContent(undefined);
+    setInitialStatus(status);
     setIsModalOpen(true);
   };
 
   const handleEditClick = (content: Content) => {
     setSelectedContent(content);
+    setInitialStatus(content.status);
     setIsModalOpen(true);
   };
 
@@ -95,7 +157,7 @@ const Kanban: React.FC = () => {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Kanban de Conteúdos</h1>
         <button
-          onClick={handleAddClick}
+          onClick={() => handleAddClick('Ideia')}
           className="bg-brand-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-brand-secondary transition-colors flex items-center gap-2 shadow-sm"
         >
           <Plus size={20} /> Novo Conteúdo
@@ -125,14 +187,21 @@ const Kanban: React.FC = () => {
                     <div
                       {...provided.droppableProps}
                       ref={provided.innerRef}
-                      className={`flex-1 overflow-y-auto p-3 space-y-4 transition-colors ${snapshot.isDraggingOver ? 'bg-brand-primary/5' : ''
-                        } custom-scrollbar`}
+                      className={`flex-1 overflow-y-auto p-3 space-y-4 transition-colors ${
+                        snapshot.isDraggingOver ? 'bg-brand-primary/5' : ''
+                      } custom-scrollbar`}
                     >
                       {boardData[column.id].length === 0 && !snapshot.isDraggingOver && (
-                        <div className="h-32 flex flex-col items-center justify-center border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-xl bg-white/50 dark:bg-gray-900/50">
+                        <button
+                          type="button"
+                          onClick={() => handleAddClick(column.id)}
+                          className="h-32 w-full flex flex-col items-center justify-center border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-xl bg-white/50 dark:bg-gray-900/50 hover:border-brand-primary hover:bg-brand-primary/5 transition-colors"
+                        >
                           <Plus size={24} className="text-gray-300 dark:text-gray-700 mb-2" />
-                          <span className="text-xs text-gray-400 dark:text-gray-500">Arraste ou crie aqui</span>
-                        </div>
+                          <span className="text-xs text-gray-400 dark:text-gray-500">
+                            Arraste ou crie aqui
+                          </span>
+                        </button>
                       )}
 
                       {boardData[column.id].map((content, index) => {
@@ -144,22 +213,24 @@ const Kanban: React.FC = () => {
                                 {...provided.draggableProps}
                                 {...provided.dragHandleProps}
                                 onClick={() => handleEditClick(content)}
-                                className={`bg-white dark:bg-gray-900 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 group hover:border-brand-primary transition-all cursor-pointer flex flex-col ${snapshot.isDragging
+                                className={`bg-white dark:bg-gray-900 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 group hover:border-brand-primary transition-all cursor-pointer flex flex-col ${
+                                  snapshot.isDragging
                                     ? 'shadow-2xl ring-2 ring-brand-primary ring-opacity-50 rotate-2'
                                     : 'hover:shadow-md'
-                                  }`}
+                                }`}
                               >
                                 <div className="flex justify-between items-start mb-3">
                                   <div className="flex flex-wrap gap-2">
                                     <span
-                                      className={`flex items-center gap-1.5 text-[10px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider ${content.channel === 'Instagram'
+                                      className={`flex items-center gap-1.5 text-[10px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider ${
+                                        content.channel === 'Instagram'
                                           ? 'bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400'
                                           : content.channel === 'TikTok'
                                             ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
                                             : content.channel === 'Blog'
                                               ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
                                               : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
-                                        }`}
+                                      }`}
                                     >
                                       {getChannelIcon(content.channel)}
                                       {content.channel}
@@ -255,6 +326,7 @@ const Kanban: React.FC = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         contentToEdit={selectedContent}
+        initialStatus={initialStatus}
       />
     </div>
   );
