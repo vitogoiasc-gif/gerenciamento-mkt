@@ -13,6 +13,7 @@ import toast from 'react-hot-toast';
 import { Content } from '../types';
 import { useAppContext } from '../store';
 import { supabase } from '../lib/supabase';
+import LinkifyText from '../utils/LinkifyText';
 import { v4 as uuidv4 } from 'uuid';
 
 interface ContentModalProps {
@@ -20,7 +21,6 @@ interface ContentModalProps {
   onClose: () => void;
   contentToEdit?: Content;
   initialStatus?: Content['status'];
-  initialDate?: string;
 }
 
 const ContentModal: React.FC<ContentModalProps> = ({
@@ -28,11 +28,11 @@ const ContentModal: React.FC<ContentModalProps> = ({
   onClose,
   contentToEdit,
   initialStatus = 'Ideia',
-  initialDate = '',
 }) => {
   const { addContent, updateContent } = useAppContext();
   const [isImageExpanded, setIsImageExpanded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [editingBriefing, setEditingBriefing] = useState(false);
 
   const isEditing = Boolean(contentToEdit?.id);
 
@@ -54,6 +54,7 @@ const ContentModal: React.FC<ContentModalProps> = ({
 
   useEffect(() => {
     setIsImageExpanded(false);
+    setEditingBriefing(false);
 
     if (isEditing && contentToEdit) {
       setFormData({
@@ -84,7 +85,7 @@ const ContentModal: React.FC<ContentModalProps> = ({
         briefing: '',
         channel: 'Instagram',
         format: 'Post',
-        publishDate: initialDate || new Date().toISOString().split('T')[0],
+        publishDate: new Date().toISOString().split('T')[0],
         status: initialStatus,
         publishedPostLink: null,
         imageData: '',
@@ -95,7 +96,7 @@ const ContentModal: React.FC<ContentModalProps> = ({
         managerComments: '',
       });
     }
-  }, [contentToEdit, isOpen, initialStatus, initialDate, isEditing]);
+  }, [contentToEdit, isOpen, initialStatus, isEditing]);
 
   if (!isOpen) return null;
 
@@ -381,6 +382,7 @@ const ContentModal: React.FC<ContentModalProps> = ({
                                 type="button"
                                 onClick={() => {
                                   setIsImageExpanded(false);
+    setEditingBriefing(false);
                                   if (
                                     formData.managerComments &&
                                     formData.managerComments.trim() !== ''
@@ -472,15 +474,39 @@ const ContentModal: React.FC<ContentModalProps> = ({
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Briefing
-            </label>
-            <textarea
-              rows={3}
-              className="w-full rounded-lg border-gray-300 shadow-sm focus:border-brand-primary focus:ring-brand-primary dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-              value={formData.briefing || ''}
-              onChange={(e) => setFormData({ ...formData, briefing: e.target.value })}
-            />
+            <div className="mb-1 flex items-center justify-between">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Briefing
+              </label>
+              {formData.briefing && (
+                <button
+                  type="button"
+                  onClick={() => setEditingBriefing(v => !v)}
+                  className="text-xs text-brand-primary hover:text-brand-secondary transition-colors"
+                >
+                  {editingBriefing ? 'Ver formatado' : 'Editar'}
+                </button>
+              )}
+            </div>
+            {!formData.briefing || editingBriefing ? (
+              <textarea
+                rows={4}
+                autoFocus={editingBriefing}
+                className="w-full rounded-lg border-gray-300 shadow-sm focus:border-brand-primary focus:ring-brand-primary dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                placeholder="Descreva o briefing do conteúdo... Cole links aqui que eles ficarão clicáveis."
+                value={formData.briefing || ''}
+                onChange={(e) => setFormData({ ...formData, briefing: e.target.value })}
+                onBlur={() => { if (formData.briefing) setEditingBriefing(false); }}
+              />
+            ) : (
+              <div
+                onClick={() => setEditingBriefing(true)}
+                className="w-full min-h-[96px] rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-3 py-2 text-sm text-gray-800 dark:text-gray-100 cursor-text leading-relaxed whitespace-pre-wrap"
+                title="Clique para editar"
+              >
+                <LinkifyText text={formData.briefing} showIcon preserveLineBreaks />
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -689,8 +715,13 @@ const ContentModal: React.FC<ContentModalProps> = ({
               <ImageIcon size={14} />
               Ajustes e Feedback
             </label>
+            {formData.managerComments ? (
+              <div className="text-sm text-amber-900 dark:text-amber-100 leading-relaxed whitespace-pre-wrap">
+                <LinkifyText text={formData.managerComments} showIcon preserveLineBreaks />
+              </div>
+            ) : null}
             <textarea
-              rows={3}
+              rows={formData.managerComments ? 2 : 3}
               className="w-full resize-none rounded-lg border-amber-300 bg-white text-sm shadow-sm placeholder-amber-300 focus:border-amber-500 focus:ring-amber-500 dark:border-amber-700/50 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-amber-700/50"
               placeholder="Descreva aqui os ajustes necessários ou feedback sobre o conteúdo..."
               value={formData.managerComments || ''}
