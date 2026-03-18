@@ -20,6 +20,7 @@ interface ContentModalProps {
   onClose: () => void;
   contentToEdit?: Content;
   initialStatus?: Content['status'];
+  initialDate?: string;
 }
 
 const ContentModal: React.FC<ContentModalProps> = ({
@@ -27,6 +28,7 @@ const ContentModal: React.FC<ContentModalProps> = ({
   onClose,
   contentToEdit,
   initialStatus = 'Ideia',
+  initialDate = '',
 }) => {
   const { addContent, updateContent } = useAppContext();
   const [isImageExpanded, setIsImageExpanded] = useState(false);
@@ -82,7 +84,7 @@ const ContentModal: React.FC<ContentModalProps> = ({
         briefing: '',
         channel: 'Instagram',
         format: 'Post',
-        publishDate: new Date().toISOString().split('T')[0],
+        publishDate: initialDate || new Date().toISOString().split('T')[0],
         status: initialStatus,
         publishedPostLink: null,
         imageData: '',
@@ -93,7 +95,7 @@ const ContentModal: React.FC<ContentModalProps> = ({
         managerComments: '',
       });
     }
-  }, [contentToEdit, isOpen, initialStatus, isEditing]);
+  }, [contentToEdit, isOpen, initialStatus, initialDate, isEditing]);
 
   if (!isOpen) return null;
 
