@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   X,
+  Edit2,
   Image as ImageIcon,
   Video,
   Link as LinkIcon,
@@ -13,6 +14,7 @@ import toast from 'react-hot-toast';
 import { Content } from '../types';
 import { useAppContext } from '../store';
 import { supabase } from '../lib/supabase';
+import LinkifyText from '../utils/LinkifyText';
 import { v4 as uuidv4 } from 'uuid';
 
 interface ContentModalProps {
@@ -31,6 +33,7 @@ const ContentModal: React.FC<ContentModalProps> = ({
   const { addContent, updateContent } = useAppContext();
   const [isImageExpanded, setIsImageExpanded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [editingBriefing, setEditingBriefing] = useState(false);
 
   const isEditing = Boolean(contentToEdit?.id);
 
@@ -52,6 +55,7 @@ const ContentModal: React.FC<ContentModalProps> = ({
 
   useEffect(() => {
     setIsImageExpanded(false);
+    setEditingBriefing(false);
 
     if (isEditing && contentToEdit) {
       setFormData({
@@ -379,6 +383,7 @@ const ContentModal: React.FC<ContentModalProps> = ({
                                 type="button"
                                 onClick={() => {
                                   setIsImageExpanded(false);
+    setEditingBriefing(false);
                                   if (
                                     formData.managerComments &&
                                     formData.managerComments.trim() !== ''
@@ -470,15 +475,44 @@ const ContentModal: React.FC<ContentModalProps> = ({
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Briefing
-            </label>
-            <textarea
-              rows={3}
-              className="w-full rounded-lg border-gray-300 shadow-sm focus:border-brand-primary focus:ring-brand-primary dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-              value={formData.briefing || ''}
-              onChange={(e) => setFormData({ ...formData, briefing: e.target.value })}
-            />
+            <div className="mb-1 flex items-center justify-between">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Briefing
+              </label>
+              {formData.briefing && !editingBriefing && (
+                <button
+                  type="button"
+                  onClick={() => setEditingBriefing(true)}
+                  className="flex items-center gap-1 text-xs text-brand-primary hover:text-brand-secondary transition-colors"
+                >
+                  <Edit2 size={11} /> Editar
+                </button>
+              )}
+              {editingBriefing && (
+                <button
+                  type="button"
+                  onClick={() => setEditingBriefing(false)}
+                  className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                >
+                  Concluir
+                </button>
+              )}
+            </div>
+
+            {editingBriefing || !formData.briefing ? (
+              <textarea
+                rows={5}
+                autoFocus={editingBriefing}
+                className="w-full rounded-lg border-gray-300 shadow-sm focus:border-brand-primary focus:ring-brand-primary dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 text-sm"
+                placeholder="Descreva o briefing... Links colados aqui ficarão clicáveis."
+                value={formData.briefing || ''}
+                onChange={(e) => setFormData({ ...formData, briefing: e.target.value })}
+              />
+            ) : (
+              <div className="w-full min-h-[80px] rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-800 dark:text-gray-100 leading-relaxed whitespace-pre-wrap">
+                <LinkifyText text={formData.briefing} showIcon preserveLineBreaks />
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -675,22 +709,10 @@ const ContentModal: React.FC<ContentModalProps> = ({
               <input
                 type="url"
                 placeholder="Link Externo / Referência"
-                className={`w-full rounded-lg border-gray-300 pl-10 text-sm shadow-sm focus:border-brand-primary focus:ring-brand-primary dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 ${formData.externalLink ? 'pr-10' : ''}`}
+                className="w-full rounded-lg border-gray-300 pl-10 text-sm shadow-sm focus:border-brand-primary focus:ring-brand-primary dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                 value={formData.externalLink || ''}
                 onChange={(e) => setFormData({ ...formData, externalLink: e.target.value })}
               />
-              {formData.externalLink && (
-                <a
-                  href={formData.externalLink.startsWith('http') ? formData.externalLink : `https://${formData.externalLink}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-brand-primary hover:text-brand-secondary transition-colors"
-                  title="Abrir link"
-                >
-                  <ExternalLink size={15} />
-                </a>
-              )}
             </div>
           </div>
 
