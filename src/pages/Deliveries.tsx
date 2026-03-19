@@ -133,7 +133,7 @@ const Deliveries: React.FC = () => {
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-[#e8eaf6]">
           Entregas & Relatórios
         </h1>
         <div className="flex flex-wrap items-center gap-2">
@@ -146,10 +146,10 @@ const Deliveries: React.FC = () => {
             <span className="hidden sm:inline">Exportar Excel</span>
           </button>
 
-          <div className="flex items-center bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+          <div className="flex items-center bg-white dark:bg-[#131c35] rounded-lg border border-gray-200 dark:border-[#1e2d4f] shadow-sm overflow-hidden">
             <button
               onClick={handlePrevWeek}
-              className="p-2 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 border-r border-gray-200 dark:border-gray-800 transition-colors"
+              className="p-2 hover:bg-gray-50 dark:hover:bg-[#1a2540] text-gray-600 dark:text-[#7b84b8] border-r border-gray-200 dark:border-[#1e2d4f] transition-colors"
               title="Semana Anterior"
             >
               <ChevronLeft size={18} />
@@ -157,14 +157,14 @@ const Deliveries: React.FC = () => {
 
             <div className="px-4 py-2 flex items-center gap-2">
               <CalendarIcon size={16} className="text-brand-primary" />
-              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap">
+              <span className="text-sm font-semibold text-gray-700 dark:text-[#a8afd8] whitespace-nowrap">
                 {format(weekStart, 'dd/MM')} - {format(weekEnd, 'dd/MM/yyyy')}
               </span>
             </div>
 
             <button
               onClick={handleNextWeek}
-              className="p-2 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 border-l border-gray-200 dark:border-gray-800 transition-colors"
+              className="p-2 hover:bg-gray-50 dark:hover:bg-[#1a2540] text-gray-600 dark:text-[#7b84b8] border-l border-gray-200 dark:border-[#1e2d4f] transition-colors"
               title="Próxima Semana"
             >
               <ChevronRight size={18} />
@@ -173,7 +173,7 @@ const Deliveries: React.FC = () => {
 
           <button
             onClick={handleCurrentWeek}
-            className="p-2 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm text-gray-600 dark:text-gray-400 hover:text-brand-primary transition-colors"
+            className="p-2 bg-white dark:bg-[#131c35] rounded-lg border border-gray-200 dark:border-[#1e2d4f] shadow-sm text-gray-600 dark:text-[#7b84b8] hover:text-brand-primary transition-colors"
             title="Voltar para Hoje"
           >
             <RotateCcw size={18} />
@@ -183,9 +183,9 @@ const Deliveries: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
-          <section className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
-            <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 flex justify-between items-center">
-              <h3 className="font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+          <section className="bg-white dark:bg-[#131c35] rounded-xl shadow-sm border border-gray-200 dark:border-[#1e2d4f] overflow-hidden">
+            <div className="p-4 border-b border-gray-200 dark:border-[#1e2d4f] bg-gray-50 dark:bg-[#1a2540]/50 flex justify-between items-center">
+              <h3 className="font-semibold text-gray-800 dark:text-[#e8eaf6] flex items-center gap-2">
                 <FileText size={18} className="text-brand-primary" />
                 Conteúdos Publicados
               </h3>
@@ -198,13 +198,13 @@ const Deliveries: React.FC = () => {
               {publishedThisWeek.map(content => (
                 <div
                   key={content.id}
-                  className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors flex justify-between items-center gap-4"
+                  className="p-4 hover:bg-gray-50 dark:hover:bg-[#1a2540]/50 transition-colors flex justify-between items-center gap-4"
                 >
                   <div>
-                    <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    <h4 className="text-sm font-medium text-gray-900 dark:text-[#e8eaf6]">
                       {content.title}
                     </h4>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-xs text-gray-500 dark:text-[#7b84b8]">
                       {content.channel} • {content.format}
                     </p>
                   </div>
@@ -215,7 +215,7 @@ const Deliveries: React.FC = () => {
                         href={content.externalLink}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs font-medium text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100 flex items-center gap-1"
+                        className="text-xs font-medium text-gray-600 hover:text-gray-800 dark:text-[#a8afd8] dark:hover:text-gray-100 flex items-center gap-1"
                       >
                         Link Externo <ExternalLink size={14} />
                       </a>
@@ -236,7 +236,7 @@ const Deliveries: React.FC = () => {
               ))}
 
               {publishedThisWeek.length === 0 && (
-                <div className="p-8 text-center text-gray-500 dark:text-gray-400 text-sm italic">
+                <div className="p-8 text-center text-gray-500 dark:text-[#7b84b8] text-sm italic">
                   Nenhum conteúdo publicado nesta semana.
                 </div>
               )}
@@ -245,14 +245,14 @@ const Deliveries: React.FC = () => {
         </div>
 
         <div className="space-y-6">
-          <section className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
-            <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
-              <h3 className="font-semibold text-gray-800 dark:text-gray-100">Resumo da Semana</h3>
+          <section className="bg-white dark:bg-[#131c35] rounded-xl shadow-sm border border-gray-200 dark:border-[#1e2d4f] overflow-hidden">
+            <div className="p-4 border-b border-gray-200 dark:border-[#1e2d4f] bg-gray-50 dark:bg-[#1a2540]/50">
+              <h3 className="font-semibold text-gray-800 dark:text-[#e8eaf6]">Resumo da Semana</h3>
             </div>
 
             <div className="p-4 space-y-4">
               <textarea
-                className="w-full h-48 p-3 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm focus:ring-2 focus:ring-brand-primary focus:border-brand-primary transition-shadow resize-none"
+                className="w-full h-48 p-3 border border-gray-300 dark:border-[#2a3a5c] dark:bg-[#1a2540] dark:text-[#e8eaf6] rounded-lg text-sm focus:ring-2 focus:ring-brand-primary focus:border-brand-primary transition-shadow resize-none"
                 placeholder="Escreva aqui o resumo das atividades, destaques e aprendizados da semana..."
                 value={summaryText}
                 onChange={e => setSummaryText(e.target.value)}
@@ -267,12 +267,12 @@ const Deliveries: React.FC = () => {
                 {isSavingSummary ? 'Salvando...' : 'Salvar Resumo'}
               </button>
 
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-gray-500 dark:text-[#7b84b8]">
                 Semana salva: {formattedWeekStart}
               </p>
 
               {isLoadingSummary && (
-                <p className="text-xs text-gray-500 dark:text-gray-400">Carregando resumo...</p>
+                <p className="text-xs text-gray-500 dark:text-[#7b84b8]">Carregando resumo...</p>
               )}
             </div>
           </section>

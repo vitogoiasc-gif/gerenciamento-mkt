@@ -1,10 +1,14 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-primary: #00BBCD;
-  --color-brand-secondary: #005E4E;
-  --color-bg-light: #F2F2ED;
-  --color-bg-dark: #001E21;
+  /* Índigo — confiança, foco, tecnologia */
+  --color-brand-primary: #4F6AF0;
+  /* Violeta — criatividade, premium, inovação */
+  --color-brand-secondary: #7C3AED;
+  /* Fundo claro: branco com leve toque azulado — clareza sem frieza */
+  --color-bg-light: #F8F8FC;
+  /* Fundo escuro: azul noite profundo — sofisticado e repousante */
+  --color-bg-dark: #0F1629;
 }
 
 /* Force dark mode to work with .dark class in Tailwind 4 */
@@ -12,13 +16,13 @@
 
 :root {
   background-color: var(--color-bg-light);
-  color: #111827;
+  color: #1a1f36;
   color-scheme: light;
 }
 
 .dark {
   background-color: var(--color-bg-dark);
-  color: #f9fafb;
+  color: #e8eaf6;
   color-scheme: dark;
 }
 

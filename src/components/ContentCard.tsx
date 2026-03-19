@@ -19,17 +19,17 @@ const ContentCard: React.FC<ContentCardProps> = React.memo(({ content, onClick }
     <motion.div
       whileTap={{ scale: 0.98 }}
       onClick={() => onClick(content)}
-      className="bg-white dark:bg-gray-900 p-4 rounded-xl shadow-sm hover:shadow-md border border-gray-200 dark:border-gray-800 group hover:border-brand-primary transition-all cursor-pointer flex flex-col h-full"
+      className="bg-white dark:bg-[#131c35] p-4 rounded-xl shadow-sm hover:shadow-md border border-gray-200 dark:border-[#1e2d4f] group hover:border-brand-primary transition-all cursor-pointer flex flex-col h-full"
     >
       <div className="flex justify-between items-start mb-3">
         <span
           className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider ${content.channel === 'Instagram'
               ? 'bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400'
               : content.channel === 'TikTok'
-                ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+                ? 'bg-gray-100 dark:bg-[#1a2540] text-gray-700 dark:text-[#a8afd8]'
                 : content.channel === 'Blog'
                   ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                  : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                  : 'bg-gray-50 dark:bg-[#1a2540] text-gray-600 dark:text-[#7b84b8]'
             }`}
         >
           {content.channel}
@@ -54,7 +54,7 @@ const ContentCard: React.FC<ContentCardProps> = React.memo(({ content, onClick }
       </div>
 
       {imageSrc ? (
-        <div className="mb-3 rounded-lg overflow-hidden border border-gray-100 dark:border-gray-800 aspect-video w-full bg-gray-50 dark:bg-gray-800">
+        <div className="mb-3 rounded-lg overflow-hidden border border-gray-100 dark:border-[#1e2d4f] aspect-video w-full bg-gray-50 dark:bg-[#1a2540]">
           <img
             src={imageSrc}
             alt={content.title}
@@ -63,18 +63,18 @@ const ContentCard: React.FC<ContentCardProps> = React.memo(({ content, onClick }
           />
         </div>
       ) : (
-        <div className="mb-3 rounded-lg border border-gray-100 dark:border-gray-800 aspect-video w-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center overflow-hidden">
+        <div className="mb-3 rounded-lg border border-gray-100 dark:border-[#1e2d4f] aspect-video w-full bg-gray-50 dark:bg-[#1a2540] flex items-center justify-center overflow-hidden">
           <ImageIcon size={32} className="text-gray-300 dark:text-gray-600 transition-transform duration-500 group-hover:scale-110" />
         </div>
       )}
 
-      <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2 line-clamp-2 leading-snug flex-1 group-hover:text-brand-primary transition-colors duration-300">
+      <h4 className="text-sm font-semibold text-gray-900 dark:text-[#e8eaf6] mb-2 line-clamp-2 leading-snug flex-1 group-hover:text-brand-primary transition-colors duration-300">
         {content.title}
       </h4>
 
-      <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+      <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100 dark:border-[#1e2d4f]">
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded border border-gray-100 dark:border-gray-700">
+          <span className="text-xs text-gray-500 dark:text-[#7b84b8] bg-gray-50 dark:bg-[#1a2540] px-2 py-1 rounded border border-gray-100 dark:border-[#2a3a5c]">
             {content.format || 'Conteúdo'}
           </span>
 
@@ -91,7 +91,7 @@ const ContentCard: React.FC<ContentCardProps> = React.memo(({ content, onClick }
           )}
         </div>
 
-        <div className="flex items-center gap-1 text-gray-400 dark:text-gray-500 text-xs" title="Data de Publicação">
+        <div className="flex items-center gap-1 text-gray-400 dark:text-[#5a6494] text-xs" title="Data de Publicação">
           <Calendar size={14} />
           {publishDate ? format(parseSafeDate(publishDate), 'dd MMM', { locale: ptBR }) : '--'}
         </div>

@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import toast from 'react-hot-toast';
 import {
   DragDropContext,
   Droppable,
@@ -108,7 +107,6 @@ const Kanban: React.FC = () => {
   });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [selectedContent, setSelectedContent] = useState<Content | undefined>(undefined);
   const [initialStatus, setInitialStatus] = useState<Content['status']>('Ideia');
 
@@ -173,7 +171,7 @@ const Kanban: React.FC = () => {
           status: previousStatus,
         });
 
-        toast.error('Erro ao mover conteúdo. O status não foi salvo.');
+        alert('Erro ao mover conteúdo. O status não foi salvo.');
       }
     } catch (error) {
       console.error('Erro inesperado ao mover conteúdo:', error);
@@ -183,7 +181,7 @@ const Kanban: React.FC = () => {
         status: previousStatus,
       });
 
-      toast.error('Erro inesperado ao mover conteúdo.');
+      alert('Erro inesperado ao mover conteúdo.');
     }
   };
 
@@ -206,29 +204,29 @@ const Kanban: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
+    const confirmed = window.confirm('Tem certeza que deseja excluir este conteúdo?');
+    if (!confirmed) return;
+
     try {
       const { error } = await supabase.from('contents').delete().eq('id', id);
 
       if (error) {
         console.error('Erro ao excluir conteúdo:', error);
-        toast.error('Erro ao excluir conteúdo.');
+        alert('Erro ao excluir conteúdo.');
         return;
       }
 
       deleteContent(id);
-      toast.success('Conteúdo excluído com sucesso!');
     } catch (error) {
       console.error('Erro inesperado ao excluir conteúdo:', error);
-      toast.error('Erro inesperado ao excluir conteúdo.');
-    } finally {
-      setConfirmDeleteId(null);
+      alert('Erro inesperado ao excluir conteúdo.');
     }
   };
 
   return (
     <div className="h-full flex flex-col">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-[#e8eaf6]">
           Kanban de Conteúdos
         </h1>
 
@@ -247,17 +245,17 @@ const Kanban: React.FC = () => {
             {columns.map((column) => (
               <div
                 key={column.id}
-                className="flex h-full max-h-full w-80 flex-shrink-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-gray-100/50 dark:border-gray-800 dark:bg-gray-800/30"
+                className="flex h-full max-h-full w-80 flex-shrink-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-gray-100/50 dark:border-[#1e2d4f] dark:bg-[#1a2540]/30"
               >
-                <div className="flex items-center justify-between rounded-t-xl border-b border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+                <div className="flex items-center justify-between rounded-t-xl border-b border-gray-200 bg-white p-4 dark:border-[#1e2d4f] dark:bg-[#131c35]">
                   <div className="flex items-center gap-2">
                     <span className={`rounded-lg p-1.5 ${column.color}`}>{column.icon}</span>
-                    <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200">
+                    <h3 className="text-sm font-bold text-gray-800 dark:text-[#d0d4f0]">
                       {column.title}
                     </h3>
                   </div>
 
-                  <span className="rounded-full bg-gray-200 px-2 py-0.5 text-[10px] font-bold text-gray-600 dark:bg-gray-700 dark:text-gray-400">
+                  <span className="rounded-full bg-gray-200 px-2 py-0.5 text-[10px] font-bold text-gray-600 dark:bg-gray-700 dark:text-[#7b84b8]">
                     {boardData[column.id].length}
                   </span>
                 </div>
@@ -274,10 +272,10 @@ const Kanban: React.FC = () => {
                       {boardData[column.id].length === 0 && !snapshot.isDraggingOver && (
                         <div
                           onClick={() => handleAddClickByColumn(column.id)}
-                          className="flex h-32 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 bg-white/50 transition-all hover:border-brand-primary hover:bg-brand-primary/5 dark:border-gray-800 dark:bg-gray-900/50"
+                          className="flex h-32 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 bg-white/50 transition-all hover:border-brand-primary hover:bg-brand-primary/5 dark:border-[#1e2d4f] dark:bg-[#131c35]/50"
                         >
                           <Plus size={24} className="mb-2 text-gray-300 dark:text-gray-700" />
-                          <span className="text-xs text-gray-400 dark:text-gray-500">
+                          <span className="text-xs text-gray-400 dark:text-[#5a6494]">
                             Arraste ou crie aqui
                           </span>
                         </div>
@@ -292,7 +290,7 @@ const Kanban: React.FC = () => {
                                 {...provided.draggableProps}
                                 {...provided.dragHandleProps}
                                 onClick={() => handleEditClick(content)}
-                                className={`group flex cursor-pointer flex-col rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all hover:border-brand-primary dark:border-gray-800 dark:bg-gray-900 ${
+                                className={`group flex cursor-pointer flex-col rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all hover:border-brand-primary dark:border-[#1e2d4f] dark:bg-[#131c35] ${
                                   snapshot.isDragging
                                     ? 'rotate-2 ring-2 ring-brand-primary ring-opacity-50 shadow-2xl'
                                     : 'hover:shadow-md'
@@ -305,10 +303,10 @@ const Kanban: React.FC = () => {
                                         content.channel === 'Instagram'
                                           ? 'bg-pink-50 text-pink-600 dark:bg-pink-900/20 dark:text-pink-400'
                                           : content.channel === 'TikTok'
-                                          ? 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                                          ? 'bg-gray-100 text-gray-700 dark:bg-[#1a2540] dark:text-[#a8afd8]'
                                           : content.channel === 'Blog'
                                           ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400'
-                                          : 'bg-gray-50 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                                          : 'bg-gray-50 text-gray-600 dark:bg-[#1a2540] dark:text-[#7b84b8]'
                                       }`}
                                     >
                                       {getChannelIcon(content.channel)}
@@ -321,7 +319,7 @@ const Kanban: React.FC = () => {
                                       type="button"
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        setConfirmDeleteId(content.id);
+                                        handleDelete(content.id);
                                       }}
                                       className="rounded p-1 text-gray-400 opacity-0 transition-opacity hover:bg-red-50 hover:text-red-500 group-hover:opacity-100 dark:hover:bg-red-900/20"
                                       title="Excluir"
@@ -332,7 +330,7 @@ const Kanban: React.FC = () => {
                                     <button
                                       type="button"
                                       onClick={(e) => e.stopPropagation()}
-                                      className="rounded p-1 text-gray-400 opacity-0 transition-opacity hover:bg-gray-100 hover:text-gray-600 group-hover:opacity-100 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+                                      className="rounded p-1 text-gray-400 opacity-0 transition-opacity hover:bg-gray-100 hover:text-gray-600 group-hover:opacity-100 dark:hover:bg-[#1a2540] dark:hover:text-gray-300"
                                       title="Mais opções"
                                     >
                                       <MoreHorizontal size={14} />
@@ -341,7 +339,7 @@ const Kanban: React.FC = () => {
                                 </div>
 
                                 {content.imageData ? (
-                                  <div className="relative mb-4 aspect-[4/3] w-full overflow-hidden rounded-lg border border-gray-100 bg-gray-50 transition-colors group-hover:border-brand-primary/30 dark:border-gray-800 dark:bg-gray-800">
+                                  <div className="relative mb-4 aspect-[4/3] w-full overflow-hidden rounded-lg border border-gray-100 bg-gray-50 transition-colors group-hover:border-brand-primary/30 dark:border-[#1e2d4f] dark:bg-[#1a2540]">
                                     <img
                                       src={content.imageData}
                                       alt=""
@@ -351,7 +349,7 @@ const Kanban: React.FC = () => {
                                     <div className="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/10" />
                                   </div>
                                 ) : content.videoData ? (
-                                  <div className="relative mb-4 aspect-[4/3] w-full overflow-hidden rounded-lg border border-gray-100 bg-gray-50 transition-colors group-hover:border-brand-primary/30 dark:border-gray-800 dark:bg-gray-800">
+                                  <div className="relative mb-4 aspect-[4/3] w-full overflow-hidden rounded-lg border border-gray-100 bg-gray-50 transition-colors group-hover:border-brand-primary/30 dark:border-[#1e2d4f] dark:bg-[#1a2540]">
                                     <video
                                       src={content.videoData}
                                       className="h-full w-full object-cover"
@@ -364,18 +362,18 @@ const Kanban: React.FC = () => {
                                     </div>
                                   </div>
                                 ) : (
-                                  <div className="mb-4 flex aspect-[4/3] w-full items-center justify-center rounded-lg border border-gray-100 bg-gray-50 text-gray-300 dark:border-gray-800 dark:bg-gray-800 dark:text-gray-700">
+                                  <div className="mb-4 flex aspect-[4/3] w-full items-center justify-center rounded-lg border border-gray-100 bg-gray-50 text-gray-300 dark:border-[#1e2d4f] dark:bg-[#1a2540] dark:text-gray-700">
                                     <Zap size={32} strokeWidth={1.5} />
                                   </div>
                                 )}
 
-                                <h4 className="mb-3 line-clamp-2 text-base font-bold leading-snug text-gray-900 transition-colors group-hover:text-brand-primary dark:text-gray-100">
+                                <h4 className="mb-3 line-clamp-2 text-base font-bold leading-snug text-gray-900 transition-colors group-hover:text-brand-primary dark:text-[#e8eaf6]">
                                   {content.title}
                                 </h4>
 
-                                <div className="mt-auto flex items-center justify-between border-t border-gray-100 pt-3 dark:border-gray-800">
+                                <div className="mt-auto flex items-center justify-between border-t border-gray-100 pt-3 dark:border-[#1e2d4f]">
                                   <div className="flex items-center gap-2">
-                                    <span className="rounded border border-gray-100 bg-gray-50 px-2 py-0.5 text-[10px] font-semibold text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
+                                    <span className="rounded border border-gray-100 bg-gray-50 px-2 py-0.5 text-[10px] font-semibold text-gray-500 dark:border-[#2a3a5c] dark:bg-[#1a2540] dark:text-[#7b84b8]">
                                       {content.format}
                                     </span>
 
@@ -388,7 +386,7 @@ const Kanban: React.FC = () => {
                                   </div>
 
                                   <div
-                                    className="flex items-center gap-1.5 text-[10px] font-medium text-gray-400 dark:text-gray-500"
+                                    className="flex items-center gap-1.5 text-[10px] font-medium text-gray-400 dark:text-[#5a6494]"
                                     title="Data de Publicação"
                                   >
                                     <Calendar size={12} />
@@ -412,38 +410,6 @@ const Kanban: React.FC = () => {
           </div>
         </DragDropContext>
       </div>
-
-
-      {/* Modal de confirmação de exclusão */}
-      {confirmDeleteId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800 w-full max-w-sm p-6">
-            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 mx-auto mb-4">
-              <Trash2 size={22} className="text-red-500" />
-            </div>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white text-center mb-1">
-              Excluir conteúdo?
-            </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 text-center mb-6">
-              Esta ação não pode ser desfeita.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setConfirmDeleteId(null)}
-                className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => handleDelete(confirmDeleteId)}
-                className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-sm font-semibold text-white transition-colors"
-              >
-                Sim, excluir
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <ContentModal
         isOpen={isModalOpen}

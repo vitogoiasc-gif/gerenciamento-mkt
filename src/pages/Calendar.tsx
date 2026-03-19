@@ -1,79 +1,17 @@
 import React, { useState } from 'react';
-import {
-  format,
-  startOfMonth,
-  endOfMonth,
-  eachDayOfInterval,
-  isSameMonth,
-  isSameDay,
-  addMonths,
-  subMonths,
-  startOfWeek,
-  endOfWeek,
-  isToday,
-} from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import {
-  ChevronLeft,
-  ChevronRight,
-  Plus,
-  Filter,
-  Calendar as CalendarIcon,
-  MessageSquare,
-  X,
-  ExternalLink,
-  Clock,
-  CheckCircle2,
-  Eye,
-  Zap,
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Filter, Calendar as CalendarIcon, MessageSquare } from 'lucide-react';
 import { useAppContext } from '../store';
 import { Content } from '../types';
 import ContentModal from '../components/ContentModal';
 import { parseSafeDate } from '../utils/date';
 
-// ─── helpers ────────────────────────────────────────────────────────────────
-
-const STATUS_STYLES: Record<Content['status'], string> = {
-  Publicado: 'bg-sky-50 dark:bg-sky-900/20 border-sky-500 text-sky-800 dark:text-sky-200',
-  Agendado: 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-500 text-indigo-800 dark:text-indigo-200',
-  Aprovado: 'bg-purple-50 dark:bg-purple-900/20 border-purple-500 text-purple-800 dark:text-purple-200',
-  Revisão: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-500 text-yellow-800 dark:text-yellow-200',
-  Produção: 'bg-blue-50 dark:bg-blue-900/20 border-blue-500 text-blue-800 dark:text-blue-200',
-  Ideia: 'bg-amber-50 dark:bg-amber-900/20 border-amber-500 text-amber-800 dark:text-amber-200',
-};
-
-const STATUS_BADGE: Record<Content['status'], string> = {
-  Publicado: 'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300',
-  Agendado: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
-  Aprovado: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
-  Revisão: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300',
-  Produção: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
-  Ideia: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
-};
-
-const STATUS_ICON: Record<Content['status'], React.ReactNode> = {
-  Publicado: <MessageSquare size={12} />,
-  Agendado: <CalendarIcon size={12} />,
-  Aprovado: <CheckCircle2 size={12} />,
-  Revisão: <Eye size={12} />,
-  Produção: <Clock size={12} />,
-  Ideia: <Zap size={12} />,
-};
-
-// ─── component ──────────────────────────────────────────────────────────────
-
 const CalendarPage: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const { contents } = useAppContext();
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedContent, setSelectedContent] = useState<Content | undefined>(undefined);
-  const [initialStatus, setInitialStatus] = useState<Content['status']>('Agendado');
-  const [initialDate, setInitialDate] = useState<string>('');
-
-  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
-
   const [statusFilter, setStatusFilter] = useState('Todos');
   const [channelFilter, setChannelFilter] = useState('Todos');
 
@@ -85,86 +23,60 @@ const CalendarPage: React.FC = () => {
   const monthEnd = endOfMonth(monthStart);
   const startDate = startOfWeek(monthStart, { weekStartsOn: 0 });
   const endDate = endOfWeek(monthEnd, { weekStartsOn: 0 });
+
+  const dateFormat = "MMMM yyyy";
   const days = eachDayOfInterval({ start: startDate, end: endDate });
 
   const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
-  const getContentsForDay = (day: Date) =>
-    contents.filter((content) => {
+  const getContentsForDay = (day: Date) => {
+    return contents.filter(content => {
+      // Append T12:00:00 to prevent timezone offset bugs when parsing YYYY-MM-DD
       const contentDate = parseSafeDate(content.publishDate);
       const matchesDay = isSameDay(contentDate, day);
       const matchesStatus = statusFilter === 'Todos' || content.status === statusFilter;
       const matchesChannel = channelFilter === 'Todos' || content.channel === channelFilter;
       return matchesDay && matchesStatus && matchesChannel;
     });
-
-  // Abrir modal para CRIAR com data do dia clicado
-  const handleDayClick = (day: Date) => {
-    setSelectedDay(day);
   };
 
-  const handleCreateOnDay = (day: Date) => {
-    setSelectedContent(undefined);
-    setInitialStatus('Agendado');
-    setInitialDate(format(day, 'yyyy-MM-dd'));
-    setIsModalOpen(true);
-  };
-
-  // Abrir modal para EDITAR
-  const handleEditContent = (content: Content, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setSelectedContent(content);
-    setInitialDate('');
-    setIsModalOpen(true);
-  };
-
-  // Botão "Novo Conteúdo" do header
   const handleAddClick = () => {
     setSelectedContent(undefined);
-    setInitialStatus('Agendado');
-    setInitialDate('');
     setIsModalOpen(true);
   };
 
-  const selectedDayContents = selectedDay ? getContentsForDay(selectedDay) : [];
+  const handleEditClick = (content: Content) => {
+    setSelectedContent(content);
+    setIsModalOpen(true);
+  };
 
   return (
-    <div className="h-full flex flex-col gap-4">
-      {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="h-full flex flex-col bg-white dark:bg-[#131c35] rounded-2xl shadow-sm border border-gray-200 dark:border-[#1e2d4f] overflow-hidden">
+      <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-[#1e2d4f] flex flex-col sm:flex-row justify-between items-center gap-4 bg-white dark:bg-[#131c35]">
         <div className="flex items-center gap-4">
           <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white capitalize tracking-tight min-w-[200px]">
-            {format(currentDate, 'MMMM yyyy', { locale: ptBR })}
+            {format(currentDate, dateFormat, { locale: ptBR })}
           </h1>
-          <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
-            <button
-              onClick={prevMonth}
-              className="p-1.5 hover:bg-white dark:hover:bg-gray-700 rounded-md transition-all text-gray-600 dark:text-gray-400 hover:shadow-sm"
-            >
+          <div className="flex bg-gray-100 dark:bg-[#1a2540] rounded-lg p-1">
+            <button onClick={prevMonth} className="p-1.5 hover:bg-white dark:hover:bg-[#1e2d4f] rounded-md transition-all text-gray-600 dark:text-[#7b84b8] hover:shadow-sm">
               <ChevronLeft size={20} />
             </button>
-            <button
-              onClick={goToToday}
-              className="px-3 py-1.5 text-sm font-semibold rounded-md hover:bg-white dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-all hover:shadow-sm"
-            >
+            <button onClick={goToToday} className="px-3 py-1.5 text-sm font-semibold rounded-md hover:bg-white dark:hover:bg-[#1e2d4f] text-gray-700 dark:text-[#a8afd8] transition-all hover:shadow-sm">
               Hoje
             </button>
-            <button
-              onClick={nextMonth}
-              className="p-1.5 hover:bg-white dark:hover:bg-gray-700 rounded-md transition-all text-gray-600 dark:text-gray-400 hover:shadow-sm"
-            >
+            <button onClick={nextMonth} className="p-1.5 hover:bg-white dark:hover:bg-[#1e2d4f] rounded-md transition-all text-gray-600 dark:text-[#7b84b8] hover:shadow-sm">
               <ChevronRight size={20} />
             </button>
           </div>
         </div>
 
         <div className="flex items-center gap-3 w-full sm:w-auto">
-          <div className="flex items-center gap-2 bg-white dark:bg-gray-900 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700">
-            <Filter size={14} className="text-gray-400" />
-            <select
+          <div className="flex items-center gap-2 bg-gray-50 dark:bg-[#1a2540] px-3 py-2 rounded-lg border border-gray-200 dark:border-[#2a3a5c] hover:border-brand-primary/50 transition-colors">
+            <Filter size={16} className="text-gray-500" />
+            <select 
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-transparent border-none text-sm font-medium text-gray-700 dark:text-gray-300 focus:ring-0 p-0 cursor-pointer outline-none"
+              className="bg-transparent border-none text-sm font-medium text-gray-700 dark:text-[#a8afd8] focus:ring-0 p-0 cursor-pointer outline-none"
             >
               <option value="Todos">Todos Status</option>
               <option value="Ideia">Ideia</option>
@@ -176,12 +88,12 @@ const CalendarPage: React.FC = () => {
             </select>
           </div>
 
-          <div className="flex items-center gap-2 bg-white dark:bg-gray-900 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700">
-            <CalendarIcon size={14} className="text-gray-400" />
-            <select
+          <div className="flex items-center gap-2 bg-gray-50 dark:bg-[#1a2540] px-3 py-2 rounded-lg border border-gray-200 dark:border-[#2a3a5c] hover:border-brand-primary/50 transition-colors">
+            <CalendarIcon size={16} className="text-gray-500" />
+            <select 
               value={channelFilter}
               onChange={(e) => setChannelFilter(e.target.value)}
-              className="bg-transparent border-none text-sm font-medium text-gray-700 dark:text-gray-300 focus:ring-0 p-0 cursor-pointer outline-none"
+              className="bg-transparent border-none text-sm font-medium text-gray-700 dark:text-[#a8afd8] focus:ring-0 p-0 cursor-pointer outline-none"
             >
               <option value="Todos">Todos Canais</option>
               <option value="Instagram">Instagram</option>
@@ -192,248 +104,91 @@ const CalendarPage: React.FC = () => {
             </select>
           </div>
 
-          <button
+          <button 
             onClick={handleAddClick}
-            className="bg-brand-primary text-white px-4 py-2 rounded-lg font-semibold hover:bg-brand-secondary transition-all flex items-center gap-2 shadow-sm whitespace-nowrap"
+            className="bg-brand-primary text-white px-4 py-2 rounded-lg font-semibold hover:bg-brand-secondary transition-all flex items-center gap-2 shadow-sm hover:shadow whitespace-nowrap"
           >
-            <Plus size={18} />
-            <span className="hidden sm:inline">Novo</span>
+            <Plus size={20} /> <span className="hidden sm:inline">Agendar</span>
           </button>
         </div>
       </div>
 
-      {/* ── Main area: calendário + painel lateral ── */}
-      <div className="flex-1 flex gap-4 min-h-0">
-        {/* Calendário */}
-        <div className="flex-1 flex flex-col bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
-          {/* Cabeçalho dos dias da semana */}
-          <div className="grid grid-cols-7 border-b border-gray-200 dark:border-gray-800">
-            {weekDays.map((day) => (
-              <div
-                key={day}
-                className="py-3 text-center text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest"
-              >
-                {day}
-              </div>
-            ))}
+      <div className="grid grid-cols-7 border-b border-gray-200 dark:border-[#1e2d4f] bg-white dark:bg-[#131c35]">
+        {weekDays.map(day => (
+          <div key={day} className="py-3 text-center text-xs font-bold text-gray-500 dark:text-[#7b84b8] uppercase tracking-widest">
+            {day}
           </div>
-
-          {/* Grid dos dias */}
-          <div className="flex-1 grid grid-cols-7 auto-rows-fr overflow-y-auto bg-gray-100 dark:bg-gray-800 gap-[1px]">
-            {days.map((day) => {
-              const dayContents = getContentsForDay(day);
-              const isCurrentMonth = isSameMonth(day, monthStart);
-              const isTodayDate = isToday(day);
-              const isSelected = selectedDay ? isSameDay(day, selectedDay) : false;
-
-              return (
-                <div
-                  key={day.toString()}
-                  onClick={() => handleDayClick(day)}
-                  className={`
-                    min-h-[100px] sm:min-h-[120px] p-2 relative group cursor-pointer transition-colors
-                    ${!isCurrentMonth
-                      ? 'bg-gray-50/80 dark:bg-gray-900/80'
-                      : isSelected
-                      ? 'bg-brand-primary/5 dark:bg-brand-primary/10'
-                      : 'bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/80'
-                    }
-                    ${isSelected ? 'ring-2 ring-inset ring-brand-primary/30' : ''}
-                  `}
-                >
-                  {/* Número do dia + botão + */}
-                  <div className="flex justify-between items-start mb-1.5">
-                    <span
-                      className={`text-sm font-semibold w-7 h-7 flex items-center justify-center rounded-full transition-colors
-                        ${isTodayDate
-                          ? 'bg-brand-primary text-white shadow-md'
-                          : !isCurrentMonth
-                          ? 'text-gray-300 dark:text-gray-600'
-                          : isSelected
-                          ? 'text-brand-primary'
-                          : 'text-gray-700 dark:text-gray-300'
-                        }
-                      `}
-                    >
-                      {format(day, 'd')}
-                    </span>
-
-                    {/* Botão + que aparece no hover */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleCreateOnDay(day);
-                      }}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity w-6 h-6 flex items-center justify-center rounded-full bg-brand-primary text-white hover:bg-brand-secondary shadow-sm"
-                      title={`Criar conteúdo para ${format(day, 'dd/MM', { locale: ptBR })}`}
-                    >
-                      <Plus size={12} />
-                    </button>
-                  </div>
-
-                  {/* Contador de itens */}
-                  {dayContents.length > 0 && (
-                    <div className="absolute top-2 right-9 opacity-0 group-hover:opacity-0">
-                    </div>
-                  )}
-
-                  {/* Cards dos conteúdos */}
-                  <div className="space-y-1 overflow-hidden max-h-[calc(100%-36px)]">
-                    {dayContents.slice(0, 3).map((content) => (
-                      <div
-                        key={content.id}
-                        onClick={(e) => handleEditContent(content, e)}
-                        className={`text-[10px] sm:text-[11px] px-1.5 py-1 rounded border-l-2 cursor-pointer transition-all hover:opacity-80 flex items-center gap-1 ${STATUS_STYLES[content.status]}`}
-                        title={`${content.title} — ${content.status}`}
-                      >
-                        <span className="flex-shrink-0">{STATUS_ICON[content.status]}</span>
-                        <span className="line-clamp-1 font-medium flex-1">{content.title}</span>
-                      </div>
-                    ))}
-
-                    {dayContents.length > 3 && (
-                      <div className="text-[10px] text-gray-400 dark:text-gray-500 font-medium pl-1">
-                        +{dayContents.length - 3} mais
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* ── Painel lateral do dia selecionado ── */}
-        {selectedDay && (
-          <div className="w-72 flex-shrink-0 flex flex-col bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
-            {/* Header do painel */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
-              <div>
-                <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider font-semibold">
-                  {format(selectedDay, 'EEEE', { locale: ptBR })}
-                </p>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                  {format(selectedDay, "d 'de' MMMM", { locale: ptBR })}
-                </h3>
-              </div>
-              <button
-                onClick={() => setSelectedDay(null)}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            {/* Botão criar para este dia */}
-            <div className="p-3 border-b border-gray-100 dark:border-gray-800">
-              <button
-                onClick={() => handleCreateOnDay(selectedDay)}
-                className="w-full flex items-center justify-center gap-2 bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primary font-semibold text-sm py-2.5 rounded-xl transition-colors"
-              >
-                <Plus size={16} />
-                Criar conteúdo neste dia
-              </button>
-            </div>
-
-            {/* Lista de conteúdos do dia */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-2">
-              {selectedDayContents.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-32 text-center">
-                  <CalendarIcon size={28} className="text-gray-200 dark:text-gray-700 mb-2" />
-                  <p className="text-sm text-gray-400 dark:text-gray-500">
-                    Nenhum conteúdo neste dia
-                  </p>
-                  <p className="text-xs text-gray-300 dark:text-gray-600 mt-1">
-                    Clique em "Criar" para adicionar
-                  </p>
-                </div>
-              ) : (
-                selectedDayContents.map((content) => (
-                  <div
-                    key={content.id}
-                    onClick={(e) => handleEditContent(content, e)}
-                    className="p-3 rounded-xl border border-gray-100 dark:border-gray-800 hover:border-brand-primary/30 cursor-pointer transition-all hover:shadow-sm group"
-                  >
-                    {/* Status badge */}
-                    <div className="flex items-center gap-2 mb-2">
-                      <span
-                        className={`flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${STATUS_BADGE[content.status]}`}
-                      >
-                        {STATUS_ICON[content.status]}
-                        {content.status}
-                      </span>
-                      <span className="text-[10px] text-gray-400 dark:text-gray-500 ml-auto">
-                        {content.channel}
-                      </span>
-                    </div>
-
-                    {/* Título */}
-                    <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-100 group-hover:text-brand-primary transition-colors line-clamp-2">
-                      {content.title}
-                    </h4>
-
-                    {/* Formato */}
-                    <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1">
-                      {content.format}
-                    </p>
-
-                    {/* Links */}
-                    {(content.publishedPostLink || content.externalLink) && (
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {content.publishedPostLink && (
-                          <a
-                            href={content.publishedPostLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="flex items-center gap-1 text-[10px] font-medium text-brand-primary hover:underline"
-                          >
-                            <ExternalLink size={10} />
-                            Ver post
-                          </a>
-                        )}
-                        {content.externalLink && (
-                          <a
-                            href={content.externalLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="flex items-center gap-1 text-[10px] font-medium text-gray-500 hover:underline"
-                          >
-                            <ExternalLink size={10} />
-                            Link externo
-                          </a>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Comentário do gestor */}
-                    {content.managerComments && (
-                      <div className="mt-2 flex items-start gap-1.5 bg-amber-50 dark:bg-amber-900/20 rounded-lg p-2">
-                        <MessageSquare size={10} className="text-amber-500 flex-shrink-0 mt-0.5" />
-                        <p className="text-[10px] text-amber-700 dark:text-amber-300 line-clamp-2">
-                          {content.managerComments}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        )}
+        ))}
       </div>
 
-      {/* ── Modal de criação/edição ── */}
-      <ContentModal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setInitialDate('');
-        }}
-        contentToEdit={selectedContent}
-        initialStatus={initialStatus}
-        initialDate={initialDate}
+      <div className="flex-1 grid grid-cols-7 auto-rows-fr overflow-y-auto bg-gray-200 dark:bg-[#1a2540] gap-[1px] border-t border-gray-200 dark:border-[#1e2d4f]">
+        {days.map((day, i) => {
+          const dayContents = getContentsForDay(day);
+          const isCurrentMonth = isSameMonth(day, monthStart);
+          const isToday = isSameDay(day, new Date());
+
+          return (
+            <div
+              key={day.toString()}
+              className={`min-h-[120px] sm:min-h-[140px] p-2 transition-colors relative group ${
+                !isCurrentMonth ? 'bg-gray-50/80 dark:bg-[#131c35]/80' : 'bg-white dark:bg-[#131c35] hover:bg-gray-50 dark:hover:bg-[#1a2540]/80'
+              }`}
+            >
+              <div className="flex justify-between items-start mb-2">
+                <span className={`text-sm font-semibold w-7 h-7 flex items-center justify-center rounded-full ${
+                  isToday ? 'bg-brand-primary text-white shadow-md' : 
+                  !isCurrentMonth ? 'text-gray-400 dark:text-gray-600' : 'text-gray-700 dark:text-[#a8afd8] group-hover:text-brand-primary transition-colors'
+                }`}>
+                  {format(day, 'd')}
+                </span>
+                {dayContents.length > 0 && (
+                  <span className="text-[10px] font-bold text-gray-500 dark:text-[#7b84b8] bg-gray-100 dark:bg-[#1a2540] px-1.5 py-0.5 rounded-md border border-gray-200 dark:border-[#2a3a5c]">
+                    {dayContents.length}
+                  </span>
+                )}
+              </div>
+              <div className="space-y-1.5 overflow-y-auto max-h-[calc(100%-32px)] custom-scrollbar pr-1">
+                {dayContents.map(content => (
+                  <div
+                    key={content.id}
+                    onClick={() => handleEditClick(content)}
+                    className={`text-[10px] sm:text-xs p-1.5 rounded-md cursor-pointer transition-all hover:shadow-md border-l-4 flex flex-col gap-1 group/item ${
+                      content.status === 'Publicado' ? 'bg-sky-50 dark:bg-sky-900/20 border-sky-500 text-sky-900 dark:text-sky-100' :
+                      content.status === 'Agendado' ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-500 text-indigo-900 dark:text-indigo-100' :
+                      content.status === 'Aprovado' ? 'bg-purple-50 dark:bg-purple-900/20 border-purple-500 text-purple-900 dark:text-purple-100' :
+                      content.status === 'Revisão' ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-500 text-yellow-900 dark:text-yellow-100' :
+                      content.status === 'Produção' ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500 text-blue-900 dark:text-blue-100' :
+                      'bg-amber-50 dark:bg-amber-900/20 border-amber-500 text-amber-900 dark:text-amber-100'
+                    }`}
+                    title={`${content.title} (${content.status})`}
+                  >
+                    <div className="flex items-start justify-between gap-1">
+                      <span className="line-clamp-1 font-semibold flex-1">{content.title}</span>
+                      {content.managerComments && (
+                        <MessageSquare size={10} className="text-brand-primary flex-shrink-0 mt-0.5" />
+                      )}
+                    </div>
+                    
+                    <div className="flex items-center justify-between opacity-80">
+                      <span className="text-[9px] uppercase tracking-wider font-bold">
+                        {content.channel}
+                      </span>
+                      <span className="text-[9px] font-medium">
+                        {content.status}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <ContentModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        contentToEdit={selectedContent} 
       />
     </div>
   );

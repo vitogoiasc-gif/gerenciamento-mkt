@@ -54,7 +54,7 @@ const ContentList: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Lista de Conteúdos</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-[#e8eaf6]">Lista de Conteúdos</h1>
         <button 
           onClick={handleAddClick}
           className="bg-brand-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-brand-secondary transition-colors flex items-center gap-2 shadow-sm"
@@ -63,13 +63,13 @@ const ContentList: React.FC = () => {
         </button>
       </div>
 
-      <div className="bg-white dark:bg-gray-900 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 flex flex-col sm:flex-row gap-4 justify-between items-center">
+      <div className="bg-white dark:bg-[#131c35] p-4 rounded-xl shadow-sm border border-gray-200 dark:border-[#1e2d4f] flex flex-col sm:flex-row gap-4 justify-between items-center">
         <div className="relative w-full sm:w-96">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
           <input
             type="text"
             placeholder="Buscar conteúdos..."
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-brand-primary transition-shadow"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-[#2a3a5c] dark:bg-[#1a2540] dark:text-[#e8eaf6] rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-brand-primary transition-shadow"
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
           />
@@ -78,7 +78,7 @@ const ContentList: React.FC = () => {
           <div className="flex items-center gap-2">
             <Filter className="text-gray-400" size={20} />
             <select
-              className="border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg py-2 pl-3 pr-10 focus:ring-brand-primary focus:border-brand-primary text-sm w-full sm:w-auto"
+              className="border-gray-300 dark:border-[#2a3a5c] dark:bg-[#1a2540] dark:text-[#e8eaf6] rounded-lg py-2 pl-3 pr-10 focus:ring-brand-primary focus:border-brand-primary text-sm w-full sm:w-auto"
               value={statusFilter}
               onChange={e => setStatusFilter(e.target.value)}
             >
@@ -97,57 +97,57 @@ const ContentList: React.FC = () => {
               <div className="relative" ref={columnMenuRef}>
                 <button
                   onClick={() => setIsColumnMenuOpen(!isColumnMenuOpen)}
-                  className={`p-2 rounded-lg transition-colors border ${isColumnMenuOpen ? 'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100' : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
+                  className={`p-2 rounded-lg transition-colors border ${isColumnMenuOpen ? 'bg-gray-100 dark:bg-[#1a2540] border-gray-300 dark:border-[#2d4275] text-gray-900 dark:text-[#e8eaf6]' : 'bg-white dark:bg-[#131c35] border-gray-200 dark:border-[#2a3a5c] text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
                   title="Configurar Colunas"
                 >
                   <Settings2 size={18} />
                 </button>
                 {isColumnMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-900 rounded-xl shadow-xl border border-gray-200 dark:border-gray-800 z-10 py-2 animate-in fade-in duration-200">
-                    <div className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800 mb-1">
+                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#131c35] rounded-xl shadow-xl border border-gray-200 dark:border-[#1e2d4f] z-10 py-2 animate-in fade-in duration-200">
+                    <div className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-[#7b84b8] uppercase tracking-wider border-b border-gray-100 dark:border-[#1e2d4f] mb-1">
                       Mostrar Colunas
                     </div>
-                    <label className="flex items-center px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors">
+                    <label className="flex items-center px-4 py-2 hover:bg-gray-50 dark:hover:bg-[#1a2540] cursor-pointer transition-colors">
                       <input 
                         type="checkbox" 
-                        className="rounded text-brand-primary focus:ring-brand-primary mr-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700" 
+                        className="rounded text-brand-primary focus:ring-brand-primary mr-3 border-gray-300 dark:border-[#2d4275] dark:bg-gray-700" 
                         checked={visibleColumns.title} 
                         onChange={() => setVisibleColumns(prev => ({...prev, title: !prev.title}))} 
                       />
-                      <span className="text-sm text-gray-700 dark:text-gray-300">Título</span>
+                      <span className="text-sm text-gray-700 dark:text-[#a8afd8]">Título</span>
                     </label>
-                    <label className="flex items-center px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors">
+                    <label className="flex items-center px-4 py-2 hover:bg-gray-50 dark:hover:bg-[#1a2540] cursor-pointer transition-colors">
                       <input 
                         type="checkbox" 
-                        className="rounded text-brand-primary focus:ring-brand-primary mr-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700" 
+                        className="rounded text-brand-primary focus:ring-brand-primary mr-3 border-gray-300 dark:border-[#2d4275] dark:bg-gray-700" 
                         checked={visibleColumns.status} 
                         onChange={() => setVisibleColumns(prev => ({...prev, status: !prev.status}))} 
                       />
-                      <span className="text-sm text-gray-700 dark:text-gray-300">Status</span>
+                      <span className="text-sm text-gray-700 dark:text-[#a8afd8]">Status</span>
                     </label>
-                    <label className="flex items-center px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors">
+                    <label className="flex items-center px-4 py-2 hover:bg-gray-50 dark:hover:bg-[#1a2540] cursor-pointer transition-colors">
                       <input 
                         type="checkbox" 
-                        className="rounded text-brand-primary focus:ring-brand-primary mr-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700" 
+                        className="rounded text-brand-primary focus:ring-brand-primary mr-3 border-gray-300 dark:border-[#2d4275] dark:bg-gray-700" 
                         checked={visibleColumns.channel} 
                         onChange={() => setVisibleColumns(prev => ({...prev, channel: !prev.channel}))} 
                       />
-                      <span className="text-sm text-gray-700 dark:text-gray-300">Canal</span>
+                      <span className="text-sm text-gray-700 dark:text-[#a8afd8]">Canal</span>
                     </label>
-                    <label className="flex items-center px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors">
+                    <label className="flex items-center px-4 py-2 hover:bg-gray-50 dark:hover:bg-[#1a2540] cursor-pointer transition-colors">
                       <input 
                         type="checkbox" 
-                        className="rounded text-brand-primary focus:ring-brand-primary mr-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700" 
+                        className="rounded text-brand-primary focus:ring-brand-primary mr-3 border-gray-300 dark:border-[#2d4275] dark:bg-gray-700" 
                         checked={visibleColumns.publishDate} 
                         onChange={() => setVisibleColumns(prev => ({...prev, publishDate: !prev.publishDate}))} 
                       />
-                      <span className="text-sm text-gray-700 dark:text-gray-300">Data Pub.</span>
+                      <span className="text-sm text-gray-700 dark:text-[#a8afd8]">Data Pub.</span>
                     </label>
                   </div>
                 )}
               </div>
             )}
-            <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1 border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center bg-gray-100 dark:bg-[#1a2540] rounded-lg p-1 border border-gray-200 dark:border-[#2a3a5c]">
               <button
                 onClick={() => setViewMode('list')}
                 className={`p-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-white dark:bg-gray-700 text-brand-primary shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
@@ -168,31 +168,31 @@ const ContentList: React.FC = () => {
       </div>
 
       {filteredContents.length === 0 ? (
-        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-16 text-center">
-          <div className="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
-            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
+        <div className="bg-white dark:bg-[#131c35] rounded-xl shadow-sm border border-gray-200 dark:border-[#1e2d4f] p-16 text-center">
+          <div className="flex flex-col items-center justify-center text-gray-500 dark:text-[#7b84b8]">
+            <div className="w-16 h-16 bg-gray-100 dark:bg-[#1a2540] rounded-full flex items-center justify-center mb-4">
               <Search size={24} className="text-gray-400" />
             </div>
-            <p className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">Nenhum conteúdo encontrado</p>
+            <p className="text-lg font-medium text-gray-900 dark:text-[#e8eaf6] mb-1">Nenhum conteúdo encontrado</p>
             <p className="text-sm">Tente ajustar seus filtros ou crie um novo conteúdo.</p>
           </div>
         </div>
       ) : viewMode === 'list' ? (
-        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden animate-in fade-in duration-300">
+        <div className="bg-white dark:bg-[#131c35] rounded-xl shadow-sm border border-gray-200 dark:border-[#1e2d4f] overflow-hidden animate-in fade-in duration-300">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
-              <thead className="bg-gray-50 dark:bg-gray-800">
+              <thead className="bg-gray-50 dark:bg-[#1a2540]">
                 <tr>
-                  {visibleColumns.title && <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Título</th>}
-                  {visibleColumns.status && <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>}
-                  {visibleColumns.channel && <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Canal</th>}
-                  {visibleColumns.publishDate && <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Data Pub.</th>}
+                  {visibleColumns.title && <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-[#7b84b8] uppercase tracking-wider">Título</th>}
+                  {visibleColumns.status && <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-[#7b84b8] uppercase tracking-wider">Status</th>}
+                  {visibleColumns.channel && <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-[#7b84b8] uppercase tracking-wider">Canal</th>}
+                  {visibleColumns.publishDate && <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-[#7b84b8] uppercase tracking-wider">Data Pub.</th>}
                   <th scope="col" className="relative px-6 py-3"><span className="sr-only">Ações</span></th>
                 </tr>
               </thead>
-              <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800">
+              <tbody className="bg-white dark:bg-[#131c35] divide-y divide-gray-200 dark:divide-gray-800">
                 {filteredContents.map((content) => (
-                  <tr key={content.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                  <tr key={content.id} className="hover:bg-gray-50 dark:hover:bg-[#1a2540]/50 transition-colors">
                     {visibleColumns.title && (
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
@@ -200,17 +200,17 @@ const ContentList: React.FC = () => {
                             <img 
                               src={content.imageData} 
                               alt="" 
-                              className="w-10 h-10 rounded-lg object-cover border border-gray-200 dark:border-gray-700"
+                              className="w-10 h-10 rounded-lg object-cover border border-gray-200 dark:border-[#2a3a5c]"
                               referrerPolicy="no-referrer"
                             />
                           ) : (
-                            <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center border border-gray-200 dark:border-gray-700">
+                            <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-[#1a2540] flex items-center justify-center border border-gray-200 dark:border-[#2a3a5c]">
                               <ImageIcon size={20} className="text-gray-400" />
                             </div>
                           )}
                           <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{content.title}</div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">{content.format}</div>
+                            <div className="text-sm font-medium text-gray-900 dark:text-[#e8eaf6]">{content.title}</div>
+                            <div className="text-sm text-gray-500 dark:text-[#7b84b8]">{content.format}</div>
                           </div>
                         </div>
                       </td>
@@ -230,12 +230,12 @@ const ContentList: React.FC = () => {
                       </td>
                     )}
                     {visibleColumns.channel && (
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-[#7b84b8]">
                         {content.channel}
                       </td>
                     )}
                     {visibleColumns.publishDate && (
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-[#7b84b8]">
                         {format(parseSafeDate(content.publishDate), "dd/MM/yyyy")}
                       </td>
                     )}

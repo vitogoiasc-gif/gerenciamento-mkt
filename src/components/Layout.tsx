@@ -41,7 +41,7 @@ const Layout: React.FC = () => {
     <div className="flex h-screen bg-bg-light dark:bg-bg-dark text-gray-900 dark:text-gray-100 font-sans transition-colors duration-300">
 
       {/* Sidebar */}
-      <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col transition-all duration-300 overflow-hidden`}>
+      <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} bg-white dark:bg-[#131c35] border-r border-gray-100 dark:border-[#1e2d4f] flex flex-col transition-all duration-300 overflow-hidden`}>
 
         <div className="p-4 flex items-center justify-center h-[72px]">
           <button
@@ -92,7 +92,7 @@ const Layout: React.FC = () => {
       <main className="flex-1 flex flex-col overflow-hidden">
 
         {/* HEADER */}
-        <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-8 py-4 flex justify-end items-center">
+        <header className="bg-white dark:bg-[#131c35] border-b border-gray-100 dark:border-[#1e2d4f] px-8 py-4 flex justify-end items-center">
 
           <div className="flex items-center gap-6">
 
@@ -115,9 +115,9 @@ const Layout: React.FC = () => {
               </button>
 
               {isNotificationsOpen && (
-                <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-800 z-50 overflow-hidden">
+                <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-[#131c35] rounded-xl shadow-2xl border border-gray-100 dark:border-[#1e2d4f] z-50 overflow-hidden">
 
-                  <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 flex justify-between items-center">
+                  <div className="p-4 border-b border-gray-100 dark:border-[#1e2d4f] bg-gray-50 dark:bg-[#0f1629]/80 flex justify-between items-center">
                     <h3 className="font-bold flex items-center gap-2">
                       <AlertCircle size={18} className="text-amber-500" />
                       Ajustes Pendentes
@@ -145,7 +145,7 @@ const Layout: React.FC = () => {
             </div>
 
             {/* DARK MODE */}
-            <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-2 bg-gray-100 dark:bg-[#1e2d4f] p-1 rounded-xl border border-gray-200 dark:border-[#2d4275]">
 
               <button
                 onClick={() => isDarkMode && toggleDarkMode()}
@@ -158,7 +158,7 @@ const Layout: React.FC = () => {
 
               <button
                 onClick={() => !isDarkMode && toggleDarkMode()}
-                className={`px-3 py-1.5 rounded-lg flex items-center gap-2 text-sm ${isDarkMode ? 'bg-gray-700 shadow-sm' : ''
+                className={`px-3 py-1.5 rounded-lg flex items-center gap-2 text-sm ${isDarkMode ? 'bg-[#2d4275] shadow-sm' : ''
                   }`}
               >
                 <Moon size={16} />
@@ -171,9 +171,9 @@ const Layout: React.FC = () => {
         </header>
 
         {/* CONTEÚDO */}
-        <div className="flex-1 overflow-y-auto p-8 bg-gray-50/50 dark:bg-bg-dark flex flex-col">
+        <div className="flex-1 overflow-y-auto p-8 bg-[#F8F8FC] dark:bg-bg-dark">
 
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 flex-1">
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 h-full">
             <Outlet />
           </div>
 
