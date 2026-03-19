@@ -171,9 +171,9 @@ const Layout: React.FC = () => {
         </header>
 
         {/* CONTEÚDO */}
-        <div className="flex-1 overflow-y-auto p-8 bg-gray-50/50 dark:bg-bg-dark">
+        <div className="flex-1 overflow-y-auto p-8 bg-gray-50/50 dark:bg-bg-dark flex flex-col">
 
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 h-full">
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 flex-1">
             <Outlet />
           </div>
 
