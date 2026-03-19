@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   X,
+  Edit2,
   Image as ImageIcon,
   Video,
   Link as LinkIcon,
@@ -14,6 +15,7 @@ import { Content } from '../types';
 import { useAppContext } from '../store';
 import { supabase } from '../lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
+import LinkifyText from '../utils/LinkifyText';
 
 interface ContentModalProps {
   isOpen: boolean;
@@ -31,6 +33,7 @@ const ContentModal: React.FC<ContentModalProps> = ({
   const { addContent, updateContent } = useAppContext();
   const [isImageExpanded, setIsImageExpanded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [editingBriefing, setEditingBriefing] = useState(false);
 
   const isEditing = Boolean(contentToEdit?.id);
 
@@ -52,6 +55,7 @@ const ContentModal: React.FC<ContentModalProps> = ({
 
   useEffect(() => {
     setIsImageExpanded(false);
+    setEditingBriefing(false);
 
     if (isEditing && contentToEdit) {
       setFormData({
@@ -287,7 +291,7 @@ const ContentModal: React.FC<ContentModalProps> = ({
           </h3>
           <button
             onClick={onClose}
-            className="text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-gray-300"
+            className="text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-[#c8cce8]"
           >
             <X size={24} />
           </button>
@@ -379,6 +383,7 @@ const ContentModal: React.FC<ContentModalProps> = ({
                                 type="button"
                                 onClick={() => {
                                   setIsImageExpanded(false);
+    setEditingBriefing(false);
                                   if (
                                     formData.managerComments &&
                                     formData.managerComments.trim() !== ''
@@ -470,15 +475,42 @@ const ContentModal: React.FC<ContentModalProps> = ({
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-[#a8afd8]">
-              Briefing
-            </label>
-            <textarea
-              rows={3}
-              className="w-full rounded-lg border-gray-300 shadow-sm focus:border-brand-primary focus:ring-brand-primary dark:border-[#2a3a5c] dark:bg-[#1a2540] dark:text-[#e8eaf6]"
-              value={formData.briefing || ''}
-              onChange={(e) => setFormData({ ...formData, briefing: e.target.value })}
-            />
+            <div className="mb-1 flex items-center justify-between">
+              <label className="block text-sm font-medium text-gray-700 dark:text-[#a8afd8]">
+                Briefing
+              </label>
+              {formData.briefing && (
+                <button
+                  type="button"
+                  onClick={() => setEditingBriefing(v => !v)}
+                  className="flex items-center gap-1 text-xs font-semibold text-brand-primary hover:text-brand-secondary transition-colors"
+                >
+                  {editingBriefing
+                    ? <><span className="text-[10px]">✓</span> Concluir</>
+                    : <><Edit2 size={11} /> Editar</>}
+                </button>
+              )}
+            </div>
+
+            {editingBriefing || !formData.briefing ? (
+              <textarea
+                rows={5}
+                autoFocus={editingBriefing}
+                className="w-full rounded-lg border-gray-300 shadow-sm focus:border-brand-primary focus:ring-brand-primary dark:border-[#2a3a5c] dark:bg-[#1a2540] dark:text-[#eaecf8] text-sm"
+                placeholder="Descreva o briefing... Links colados aqui ficarão clicáveis."
+                value={formData.briefing || ''}
+                onChange={(e) => setFormData({ ...formData, briefing: e.target.value })}
+                onBlur={() => { if (formData.briefing) setEditingBriefing(false); }}
+              />
+            ) : (
+              <div
+                onClick={() => setEditingBriefing(true)}
+                title="Clique para editar"
+                className="w-full min-h-[80px] rounded-lg border border-gray-200 dark:border-[#2a3a5c] bg-gray-50 dark:bg-[#1a2540] px-3 py-2.5 text-sm text-gray-800 dark:text-[#eaecf8] cursor-text leading-relaxed whitespace-pre-wrap hover:border-brand-primary/40 transition-colors"
+              >
+                <LinkifyText text={formData.briefing} showIcon preserveLineBreaks />
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
