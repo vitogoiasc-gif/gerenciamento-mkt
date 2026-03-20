@@ -32,18 +32,16 @@ import { parseSafeDate } from '../utils/date';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 
-const columns: {
-  id: Content['status'];
-  title: string;
-  icon: React.ReactNode;
-  color: string;
-}[] = [
-  { id: 'Ideia',    title: 'Ideias',       icon: <Zap size={18} />,          color: 'text-amber-500 bg-amber-50 dark:bg-amber-900/20' },
-  { id: 'Produção', title: 'Em Produção',  icon: <Clock size={18} />,         color: 'text-blue-500 bg-blue-50 dark:bg-blue-900/20' },
-  { id: 'Revisão',  title: 'Em Revisão',   icon: <Eye size={18} />,           color: 'text-yellow-500 bg-yellow-50 dark:bg-yellow-900/20' },
-  { id: 'Aprovado', title: 'Aprovados',    icon: <CheckCircle2 size={18} />,  color: 'text-purple-500 bg-purple-50 dark:bg-purple-900/20' },
-  { id: 'Agendado', title: 'Agendados',    icon: <Calendar size={18} />,      color: 'text-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' },
-  { id: 'Publicado',title: 'Publicados',   icon: <MessageSquare size={18} />, color: 'text-sky-500 bg-sky-50 dark:bg-sky-900/20' },
+// ─── Columns config ───────────────────────────────────────────────────────────
+
+const columns: { id: Content['status']; title: string; icon: React.ReactNode; color: string }[] = [
+  { id: 'Ideia',     title: 'Ideias',      icon: <Zap size={18} />,          color: 'text-amber-500 bg-amber-50 dark:bg-amber-900/20' },
+  { id: 'Produção',  title: 'Em Produção', icon: <Clock size={18} />,         color: 'text-blue-500 bg-blue-50 dark:bg-blue-900/20' },
+  { id: 'Revisão',   title: 'Em Revisão',  icon: <Eye size={18} />,           color: 'text-yellow-500 bg-yellow-50 dark:bg-yellow-900/20' },
+  { id: 'Aprovado',  title: 'Aprovados',   icon: <CheckCircle2 size={18} />,  color: 'text-purple-500 bg-purple-50 dark:bg-purple-900/20' },
+  { id: 'Agendado',  title: 'Agendados',   icon: <Calendar size={18} />,      color: 'text-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' },
+  { id: 'Publicado', title: 'Publicados',  icon: <MessageSquare size={18} />, color: 'text-sky-500 bg-sky-50 dark:bg-sky-900/20' },
+  { id: 'Executado', title: 'Executados',  icon: <CheckCircle2 size={18} />,  color: 'text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' },
 ];
 
 const getChannelIcon = (channel: string) => {
@@ -58,114 +56,108 @@ const getChannelIcon = (channel: string) => {
   }
 };
 
+// ─── Component ────────────────────────────────────────────────────────────────
+
 const Kanban: React.FC = () => {
   const { contents, updateContent, deleteContent } = useAppContext();
 
-  const [boardData, setBoardData] = useState<Record<Content['status'], Content[]>>({
-    Ideia: [], Produção: [], Revisão: [], Aprovado: [], Agendado: [], Publicado: [],
+  const emptyBoard = (): Record<Content['status'], Content[]> => ({
+    Ideia: [], Produção: [], Revisão: [], Aprovado: [],
+    Agendado: [], Publicado: [], Executado: [],
   });
 
+  const [boardData, setBoardData]             = useState<Record<Content['status'], Content[]>>(emptyBoard());
   const [isModalOpen, setIsModalOpen]         = useState(false);
   const [selectedContent, setSelectedContent] = useState<Content | undefined>(undefined);
   const [initialStatus, setInitialStatus]     = useState<Content['status']>('Ideia');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  // ── Horizontal drag-to-scroll refs ──────────────────────────────────────────
-  const scrollRef   = useRef<HTMLDivElement>(null);
-  const isDragging  = useRef(false);
-  const startX      = useRef(0);
-  const scrollLeft  = useRef(0);
-  const dragMoved   = useRef(false);
+  // ── Horizontal drag-to-scroll ─────────────────────────────────────────────
+  const scrollRef  = useRef<HTMLDivElement>(null);
+  const dragging   = useRef(false);
+  const startX     = useRef(0);
+  const scrollLeft = useRef(0);
 
   const onMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    // Only trigger on the board background, not on cards
     const target = e.target as HTMLElement;
-    if (target.closest('[data-drag-handle]') || target.closest('[data-card]')) return;
-
-    isDragging.current = true;
-    dragMoved.current  = false;
-    startX.current     = e.pageX - (scrollRef.current?.offsetLeft ?? 0);
+    if (target.closest('[data-card]') || target.closest('[data-droppable]')) return;
+    dragging.current  = true;
+    startX.current    = e.pageX - (scrollRef.current?.offsetLeft ?? 0);
     scrollLeft.current = scrollRef.current?.scrollLeft ?? 0;
     if (scrollRef.current) scrollRef.current.style.cursor = 'grabbing';
   }, []);
 
   const onMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isDragging.current || !scrollRef.current) return;
+    if (!dragging.current || !scrollRef.current) return;
     e.preventDefault();
-    const x    = e.pageX - scrollRef.current.offsetLeft;
-    const walk = (x - startX.current) * 1.2;
-    if (Math.abs(walk) > 3) dragMoved.current = true;
-    scrollRef.current.scrollLeft = scrollLeft.current - walk;
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    scrollRef.current.scrollLeft = scrollLeft.current - (x - startX.current) * 1.2;
   }, []);
 
-  const onMouseUp = useCallback(() => {
-    isDragging.current = false;
+  const stopDrag = useCallback(() => {
+    dragging.current = false;
     if (scrollRef.current) scrollRef.current.style.cursor = 'grab';
   }, []);
 
-  const onMouseLeave = useCallback(() => {
-    isDragging.current = false;
-    if (scrollRef.current) scrollRef.current.style.cursor = 'grab';
-  }, []);
-
-  // ── Board data ───────────────────────────────────────────────────────────────
+  // ── Board data ────────────────────────────────────────────────────────────
   useEffect(() => {
-    const newBoardData: Record<Content['status'], Content[]> = {
-      Ideia: [], Produção: [], Revisão: [], Aprovado: [], Agendado: [], Publicado: [],
-    };
-    contents.forEach(c => { if (newBoardData[c.status]) newBoardData[c.status].push(c); });
-    setBoardData(newBoardData);
+    const next = emptyBoard();
+    contents.forEach(c => { if (next[c.status] !== undefined) next[c.status].push(c); });
+    setBoardData(next);
   }, [contents]);
 
-  // ── Drag between columns ─────────────────────────────────────────────────────
+  // ── DnD ───────────────────────────────────────────────────────────────────
   const onDragEnd = async (result: DropResult) => {
     const { source, destination, draggableId } = result;
     if (!destination) return;
     if (source.droppableId === destination.droppableId && source.index === destination.index) return;
 
     const newStatus    = destination.droppableId as Content['status'];
-    const contentToMove = contents.find(item => item.id === draggableId);
-    if (!contentToMove) return;
+    const item         = contents.find(c => c.id === draggableId);
+    if (!item) return;
 
-    const previousStatus = contentToMove.status;
-    updateContent({ ...contentToMove, status: newStatus });
+    const prevStatus   = item.status;
+    updateContent({ ...item, status: newStatus });
 
     try {
       const { error } = await supabase.from('contents').update({ status: newStatus }).eq('id', draggableId);
       if (error) {
-        updateContent({ ...contentToMove, status: previousStatus });
-        toast.error('Erro ao mover conteúdo. O status não foi salvo.');
+        updateContent({ ...item, status: prevStatus });
+        toast.error('Erro ao mover conteúdo.');
       }
     } catch {
-      updateContent({ ...contentToMove, status: previousStatus });
+      updateContent({ ...item, status: prevStatus });
       toast.error('Erro inesperado ao mover conteúdo.');
     }
   };
 
-  // ── Actions ──────────────────────────────────────────────────────────────────
-  const handleAddClick          = () => { setSelectedContent(undefined); setInitialStatus('Ideia');   setIsModalOpen(true); };
-  const handleAddClickByColumn  = (status: Content['status']) => { setSelectedContent(undefined); setInitialStatus(status); setIsModalOpen(true); };
-  const handleEditClick         = (content: Content) => { setSelectedContent(content); setInitialStatus(content.status); setIsModalOpen(true); };
+  // ── Actions ───────────────────────────────────────────────────────────────
+  const handleAddClick         = () => { setSelectedContent(undefined); setInitialStatus('Ideia');   setIsModalOpen(true); };
+  const handleAddByColumn      = (s: Content['status']) => { setSelectedContent(undefined); setInitialStatus(s); setIsModalOpen(true); };
+  const handleEditClick        = (c: Content) => { setSelectedContent(c); setInitialStatus(c.status); setIsModalOpen(true); };
 
   const handleDelete = async (id: string) => {
     try {
       const { error } = await supabase.from('contents').delete().eq('id', id);
       if (error) { toast.error('Erro ao excluir conteúdo.'); return; }
       deleteContent(id);
-      toast.success('Conteúdo excluído com sucesso!');
-    } catch {
-      toast.error('Erro inesperado ao excluir conteúdo.');
-    } finally {
-      setConfirmDeleteId(null);
-    }
+      toast.success('Conteúdo excluído!');
+    } catch { toast.error('Erro inesperado.'); }
+    finally { setConfirmDeleteId(null); }
   };
 
-  // ── Render ───────────────────────────────────────────────────────────────────
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col" style={{ height: 'calc(100vh - 140px)' }}>
+    // h-full fills the parent flex-1 container from Layout
+    // flex flex-col so header + board stack vertically
+    // min-h-0 is critical: allows flex children to shrink below content size
+    <div
+      className="flex flex-col -mx-8 -mt-8 px-8 pt-6 min-h-0"
+      style={{ height: 'calc(100vh - 73px)' }}
+    >
 
       {/* Header */}
-      <div className="mb-4 flex flex-shrink-0 items-center justify-between">
+      <div className="flex flex-shrink-0 items-center justify-between mb-4">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-[#eaecf8]">
           Kanban de Conteúdos
         </h1>
@@ -173,31 +165,39 @@ const Kanban: React.FC = () => {
           onClick={handleAddClick}
           className="flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2 font-medium text-white shadow-sm transition-colors hover:bg-brand-secondary"
         >
-          <Plus size={20} />
-          Novo Conteúdo
+          <Plus size={20} /> Novo Conteúdo
         </button>
       </div>
 
-      {/* Board — horizontal drag-to-scroll */}
+      {/*
+        Board container:
+        - flex-1 + min-h-0: fills remaining height and allows shrinking
+        - overflow-x-auto: horizontal scroll appears HERE (right below the columns)
+        - overflow-y-hidden: no vertical scroll at this level
+        - cursor grab for drag-to-scroll
+      */}
       <div
         ref={scrollRef}
         onMouseDown={onMouseDown}
         onMouseMove={onMouseMove}
-        onMouseUp={onMouseUp}
-        onMouseLeave={onMouseLeave}
-        className="flex-1 overflow-x-auto overflow-y-hidden select-none"
+        onMouseUp={stopDrag}
+        onMouseLeave={stopDrag}
+        className="flex-1 min-h-0 overflow-x-auto overflow-y-hidden select-none pb-2"
         style={{ cursor: 'grab' }}
       >
         <DragDropContext onDragEnd={onDragEnd}>
-          {/* inline-flex so columns don't wrap and the container gets a real scrollWidth */}
-          <div className="inline-flex h-full gap-4 px-1 pb-2">
+          {/*
+            inline-flex: columns sit side by side, container gets real scrollWidth
+            h-full: fills the scroll container height
+            gap + px for spacing
+          */}
+          <div className="inline-flex h-full gap-4 px-1">
             {columns.map(column => (
               <div
                 key={column.id}
-                className="flex w-72 flex-shrink-0 flex-col rounded-xl border border-gray-200 bg-gray-100/60 dark:border-[#1e2d4f] dark:bg-[#1a2540]/40"
-                style={{ height: '100%' }}
+                className="flex w-72 flex-shrink-0 flex-col min-h-0 rounded-xl border border-gray-200 bg-gray-100/60 dark:border-[#1e2d4f] dark:bg-[#1a2540]/40"
               >
-                {/* Column header */}
+                {/* Column header — fixed, never scrolls */}
                 <div className="flex flex-shrink-0 items-center justify-between rounded-t-xl border-b border-gray-200 bg-white px-4 py-3 dark:border-[#1e2d4f] dark:bg-[#131c35]">
                   <div className="flex items-center gap-2">
                     <span className={`rounded-lg p-1.5 ${column.color}`}>{column.icon}</span>
@@ -208,21 +208,26 @@ const Kanban: React.FC = () => {
                   </span>
                 </div>
 
-                {/* Droppable — this is the only element with vertical scroll */}
+                {/*
+                  Droppable:
+                  - flex-1 + min-h-0: fills column height
+                  - overflow-y-auto: INDEPENDENT vertical scroll per column
+                  - overflow-x-hidden: no horizontal scroll inside columns
+                */}
                 <Droppable droppableId={column.id}>
                   {(provided, snapshot) => (
                     <div
                       ref={provided.innerRef}
                       {...provided.droppableProps}
-                      className={`custom-scrollbar flex-1 space-y-3 overflow-y-auto overflow-x-hidden p-3 transition-colors ${
+                      data-droppable="true"
+                      onMouseDown={e => e.stopPropagation()}
+                      className={`custom-scrollbar flex-1 min-h-0 overflow-y-auto overflow-x-hidden space-y-3 p-3 transition-colors ${
                         snapshot.isDraggingOver ? 'bg-brand-primary/5' : ''
                       }`}
-                      // Stop mouse-drag-scroll from conflicting with DnD inside columns
-                      onMouseDown={e => e.stopPropagation()}
                     >
                       {boardData[column.id].length === 0 && !snapshot.isDraggingOver && (
                         <div
-                          onClick={() => handleAddClickByColumn(column.id)}
+                          onClick={() => handleAddByColumn(column.id)}
                           className="flex h-28 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 bg-white/50 transition-all hover:border-brand-primary hover:bg-brand-primary/5 dark:border-[#1e2d4f] dark:bg-[#131c35]/40"
                         >
                           <Plus size={22} className="mb-1.5 text-gray-300 dark:text-[#2a3a5c]" />
@@ -261,17 +266,15 @@ const Kanban: React.FC = () => {
                                   <div className="flex items-center gap-1">
                                     <button
                                       type="button"
-                                      onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(content.id); }}
+                                      onClick={e => { e.stopPropagation(); setConfirmDeleteId(content.id); }}
                                       className="rounded p-1 text-gray-400 opacity-0 transition-opacity hover:bg-red-50 hover:text-red-500 group-hover:opacity-100 dark:hover:bg-red-900/20"
-                                      title="Excluir"
                                     >
                                       <Trash2 size={14} />
                                     </button>
                                     <button
                                       type="button"
-                                      onClick={(e) => e.stopPropagation()}
+                                      onClick={e => e.stopPropagation()}
                                       className="rounded p-1 text-gray-400 opacity-0 transition-opacity hover:bg-gray-100 hover:text-gray-600 group-hover:opacity-100 dark:hover:bg-[#1a2540]"
-                                      title="Mais opções"
                                     >
                                       <MoreHorizontal size={14} />
                                     </button>
