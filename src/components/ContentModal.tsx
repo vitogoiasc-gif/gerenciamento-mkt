@@ -17,9 +17,11 @@ import {
   CheckCircle2,
   MessageSquare,
   Sparkles,
+  Paperclip,
+  Plus,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { Content } from '../types';
+import { Content, ContentDocument } from '../types';
 import { useAppContext } from '../store';
 import { supabase } from '../lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
@@ -95,6 +97,7 @@ const ContentModal: React.FC<ContentModalProps> = ({
     videoName: '',
     externalLink: '',
     managerComments: '',
+    documents: [],
   });
 
   const [formData, setFormData] = useState<Partial<Content>>(emptyForm());
@@ -117,6 +120,7 @@ const ContentModal: React.FC<ContentModalProps> = ({
         videoName:       contentToEdit.videoName       ?? '',
         externalLink:    contentToEdit.externalLink    ?? (contentToEdit as any).external_link    ?? '',
         managerComments: contentToEdit.managerComments ?? (contentToEdit as any).manager_comments ?? '',
+        documents: contentToEdit.documents ?? (contentToEdit as any).documents ?? [],
       });
     } else {
       setFormData(emptyForm());
@@ -155,6 +159,66 @@ const ContentModal: React.FC<ContentModalProps> = ({
     catch { toast.error('Não foi possível copiar.'); }
   };
 
+
+  const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []) as File[];
+    if (!files.length) return;
+
+    const allowed = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-powerpoint',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'text/plain',
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+    ];
+
+    for (const file of files) {
+      if (!allowed.includes(file.type)) {
+        toast.error(`Tipo não suportado: ${file.name}`);
+        continue;
+      }
+      if (file.size > 20 * 1024 * 1024) {
+        toast.error(`${file.name} excede 20MB.`);
+        continue;
+      }
+      try {
+        const filePath = `documents/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+        const { error } = await supabase.storage.from('content-media').upload(filePath, file);
+        if (error) { toast.error(`Erro ao enviar ${file.name}.`); continue; }
+        const { data } = supabase.storage.from('content-media').getPublicUrl(filePath);
+        const doc: ContentDocument = { name: file.name, url: data.publicUrl, size: file.size, type: file.type };
+        setFormData(p => ({ ...p, documents: [...(p.documents ?? []), doc] }));
+        toast.success(`${file.name} enviado!`);
+      } catch { toast.error(`Erro ao enviar ${file.name}.`); }
+    }
+    e.target.value = '';
+  };
+
+  const removeDocument = (url: string) =>
+    setFormData(p => ({ ...p, documents: (p.documents ?? []).filter(d => d.url !== url) }));
+
+  const formatBytes = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const getDocIcon = (type: string) => {
+    if (type === 'application/pdf') return '📄';
+    if (type.includes('word')) return '📝';
+    if (type.includes('excel') || type.includes('sheet')) return '📊';
+    if (type.includes('powerpoint') || type.includes('presentation')) return '📑';
+    if (type.startsWith('image/')) return '🖼️';
+    return '📎';
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title || !formData.publishDate) {
@@ -175,6 +239,7 @@ const ContentModal: React.FC<ContentModalProps> = ({
       image_url:           formData.imageData         || '',
       video_url:           formData.videoData         || '',
       scheduled_for:       formData.publishDate       || null,
+      documents:           formData.documents         ?? [],
     };
     try {
       if (isEditing && contentToEdit) {
@@ -191,6 +256,7 @@ const ContentModal: React.FC<ContentModalProps> = ({
           publishDate:      data.scheduled_for      ?? formData.publishDate        ?? '',
           channel:          data.channel            ?? formData.channel            ?? 'Instagram',
           briefing:         data.briefing           ?? data.description            ?? formData.briefing ?? '',
+          documents:        data.documents           ?? formData.documents           ?? [],
         } as Content);
         toast.success('Conteúdo atualizado!');
       } else {
@@ -210,6 +276,7 @@ const ContentModal: React.FC<ContentModalProps> = ({
           format:           data.format             ?? formData.format             ?? 'Post',
           title:            data.title              ?? formData.title              ?? '',
           briefing:         data.briefing           ?? data.description            ?? formData.briefing ?? '',
+          documents:        data.documents           ?? formData.documents           ?? [],
         } as Content);
         toast.success('Conteúdo criado!');
       }
@@ -594,6 +661,79 @@ const ContentModal: React.FC<ContentModalProps> = ({
                   )}
                 </div>
               </div>
+            </div>
+
+            {/* Documentos */}
+            <div className="rounded-xl border border-gray-100 dark:border-[#1e2d4f] bg-gray-50/50 dark:bg-[#1a2540]/30 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <FieldLabel icon={<Paperclip size={12} />}>Documentos anexados</FieldLabel>
+                <label className="flex items-center gap-1.5 cursor-pointer rounded-lg bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primary px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-colors">
+                  <Upload size={11} /> Anexar
+                  <input
+                    type="file"
+                    multiple
+                    className="hidden"
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.webp"
+                    onChange={handleDocumentUpload}
+                  />
+                </label>
+              </div>
+
+              {(formData.documents ?? []).length === 0 ? (
+                <label className="flex flex-col items-center justify-center h-20 w-full cursor-pointer rounded-xl border-2 border-dashed border-gray-200 dark:border-[#2a3a5c] hover:border-brand-primary/50 hover:bg-brand-primary/5 transition-all">
+                  <Paperclip size={18} className="text-gray-300 dark:text-[#2a3a5c] mb-1" />
+                  <span className="text-[10px] text-gray-400 dark:text-[#505880]">PDF, Word, Excel, PowerPoint, imagens — máx. 20MB</span>
+                  <input
+                    type="file"
+                    multiple
+                    className="hidden"
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.webp"
+                    onChange={handleDocumentUpload}
+                  />
+                </label>
+              ) : (
+                <div className="space-y-2">
+                  {(formData.documents ?? []).map(doc => (
+                    <div key={doc.url} className="flex items-center gap-3 rounded-xl border border-gray-200 dark:border-[#2a3a5c] bg-white dark:bg-[#131c35] px-3 py-2.5">
+                      <span className="text-base flex-shrink-0">{getDocIcon(doc.type)}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-gray-800 dark:text-[#c8cce8] truncate">{doc.name}</p>
+                        <p className="text-[10px] text-gray-400 dark:text-[#505880]">{formatBytes(doc.size)}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <a
+                          href={doc.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={e => e.stopPropagation()}
+                          className="flex items-center justify-center h-7 w-7 rounded-lg text-brand-primary hover:bg-brand-primary/10 transition-colors"
+                          title="Abrir documento"
+                        >
+                          <ExternalLink size={13} />
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => removeDocument(doc.url)}
+                          className="flex items-center justify-center h-7 w-7 rounded-lg text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 transition-colors"
+                          title="Remover"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  <label className="flex items-center gap-2 cursor-pointer text-[10px] text-brand-primary hover:text-brand-secondary font-semibold transition-colors mt-1 pl-1">
+                    <Plus size={11} /> Adicionar mais arquivos
+                    <input
+                      type="file"
+                      multiple
+                      className="hidden"
+                      accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.webp"
+                      onChange={handleDocumentUpload}
+                    />
+                  </label>
+                </div>
+              )}
             </div>
 
             {/* Ajustes e Feedback */}
