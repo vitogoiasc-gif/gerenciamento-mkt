@@ -464,35 +464,33 @@ const ContentModal: React.FC<ContentModalProps> = ({
             <div>
               <div className="flex items-center justify-between mb-2">
                 <FieldLabel icon={<FileText size={12} />}>Briefing</FieldLabel>
-                {formData.briefing && (
-                  <button
-                    type="button"
-                    onClick={() => setEditingBriefing(v => !v)}
-                    className="flex items-center gap-1 text-[10px] font-semibold text-brand-primary hover:text-brand-secondary transition-colors"
-                  >
-                    {editingBriefing
-                      ? <><CheckCircle2 size={11} /> Concluir</>
-                      : <><Edit2 size={11} /> Editar</>}
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => setEditingBriefing(v => !v)}
+                  className="flex items-center gap-1 text-[10px] font-semibold text-brand-primary hover:text-brand-secondary transition-colors"
+                >
+                  {editingBriefing
+                    ? <><CheckCircle2 size={11} /> Concluir</>
+                    : <><Edit2 size={11} /> Editar</>}
+                </button>
               </div>
-              {editingBriefing || !formData.briefing ? (
+              {editingBriefing ? (
                 <textarea
                   rows={5}
-                  autoFocus={editingBriefing}
+                  autoFocus
                   className={field + ' resize-none leading-relaxed'}
                   placeholder="Descreva o briefing... Links colados aqui ficarão clicáveis."
                   value={formData.briefing || ''}
                   onChange={e => setFormData({ ...formData, briefing: e.target.value })}
-                  onBlur={() => { if (formData.briefing) setEditingBriefing(false); }}
                 />
               ) : (
                 <div
-                  onClick={() => setEditingBriefing(true)}
-                  title="Clique para editar"
-                  className="w-full min-h-[96px] rounded-xl border border-gray-200 dark:border-[#2a3a5c] bg-gray-50 dark:bg-[#1a2540] px-3 py-2.5 text-sm text-gray-800 dark:text-[#c8cce8] cursor-text leading-relaxed whitespace-pre-wrap hover:border-brand-primary/40 transition-colors"
+                  className="w-full min-h-[96px] rounded-xl border border-gray-200 dark:border-[#2a3a5c] bg-gray-50 dark:bg-[#1a2540] px-3 py-2.5 text-sm text-gray-800 dark:text-[#c8cce8] leading-relaxed whitespace-pre-wrap"
                 >
-                  <LinkifyText text={formData.briefing} showIcon preserveLineBreaks />
+                  {formData.briefing
+                    ? <LinkifyText text={formData.briefing} showIcon preserveLineBreaks />
+                    : <span className="text-gray-300 dark:text-[#3d4f7c]">Nenhum briefing. Clique em Editar para adicionar.</span>
+                  }
                 </div>
               )}
             </div>
