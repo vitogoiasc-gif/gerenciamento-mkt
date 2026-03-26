@@ -12,6 +12,7 @@ import CalendarPage from './pages/Calendar';
 import Kanban from './pages/Kanban';
 import ContentList from './pages/ContentList';
 import Deliveries from './pages/Deliveries';
+import Dashboard from './pages/Dashboard';
 
 export default function App() {
   return (
@@ -43,6 +44,7 @@ export default function App() {
             <Route path="kanban" element={<Kanban />} />
             <Route path="list" element={<ContentList />} />
             <Route path="deliveries" element={<Deliveries />} />
+            <Route path="dashboard" element={<Dashboard />} />
           </Route>
         </Routes>
       </BrowserRouter>

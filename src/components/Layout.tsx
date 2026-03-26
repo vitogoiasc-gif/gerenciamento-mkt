@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { Calendar, Kanban, List, BarChart3, Moon, Sun, Bell, MessageSquare, AlertCircle, PanelLeft } from 'lucide-react';
+import { Calendar, Kanban, List, BarChart3, Moon, Sun, Bell, MessageSquare, AlertCircle, PanelLeft, TrendingUp } from 'lucide-react';
 import { useAppContext } from '../store';
 import ContentModal from './ContentModal';
 import { Content } from '../types';
@@ -19,6 +19,7 @@ const Layout: React.FC = () => {
     { to: '/kanban', icon: <Kanban size={20} />, label: 'Kanban' },
     { to: '/list', icon: <List size={20} />, label: 'Lista de Conteúdos' },
     { to: '/deliveries', icon: <BarChart3 size={20} />, label: 'Entregas & Relatórios' },
+    { to: '/dashboard', icon: <TrendingUp size={20} />, label: 'Dashboard' },
   ];
 
   useEffect(() => {
