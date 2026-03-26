@@ -5,6 +5,7 @@ import { ptBR } from 'date-fns/locale';
 import { Image as ImageIcon, Calendar, MessageSquare } from 'lucide-react';
 import { Content } from '../types';
 import { parseSafeDate } from '../utils/date';
+import OwnershipTags from './OwnershipTags';
 
 interface ContentCardProps {
   content: Content;
@@ -68,11 +69,14 @@ const ContentCard: React.FC<ContentCardProps> = React.memo(({ content, onClick }
         </div>
       )}
 
-      <h4 className="text-sm font-semibold text-gray-900 dark:text-[#e8eaf6] mb-2 line-clamp-2 leading-snug flex-1 group-hover:text-brand-primary transition-colors duration-300">
+      <h4 className="text-sm font-semibold text-gray-900 dark:text-[#e8eaf6] mb-2 line-clamp-2 leading-snug group-hover:text-brand-primary transition-colors duration-300">
         {content.title}
       </h4>
 
-      <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100 dark:border-[#1e2d4f]">
+      {/* Tags de responsáveis */}
+      <OwnershipTags content={content} compact className="mb-3" />
+
+      <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-100 dark:border-[#1e2d4f]">
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-500 dark:text-[#7b84b8] bg-gray-50 dark:bg-[#1a2540] px-2 py-1 rounded border border-gray-100 dark:border-[#2a3a5c]">
             {content.format || 'Conteúdo'}

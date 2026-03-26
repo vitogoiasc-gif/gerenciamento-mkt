@@ -6,6 +6,7 @@ import { Search, Filter, Plus, Edit2, Image as ImageIcon, LayoutGrid, List as Li
 import { VirtuosoGrid } from 'react-virtuoso';
 import ContentModal from '../components/ContentModal';
 import ContentCard from '../components/ContentCard';
+import OwnershipTags from '../components/OwnershipTags';
 import { Content } from '../types';
 import { parseSafeDate } from '../utils/date';
 
@@ -186,6 +187,7 @@ const ContentList: React.FC = () => {
                   {visibleColumns.title && <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-[#7b84b8] uppercase tracking-wider">Título</th>}
                   {visibleColumns.status && <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-[#7b84b8] uppercase tracking-wider">Status</th>}
                   {visibleColumns.channel && <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-[#7b84b8] uppercase tracking-wider">Canal</th>}
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-[#7b84b8] uppercase tracking-wider">Responsáveis</th>
                   {visibleColumns.publishDate && <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-[#7b84b8] uppercase tracking-wider">Data Pub.</th>}
                   <th scope="col" className="relative px-6 py-3"><span className="sr-only">Ações</span></th>
                 </tr>
@@ -234,6 +236,9 @@ const ContentList: React.FC = () => {
                         {content.channel}
                       </td>
                     )}
+                    <td className="px-6 py-4">
+                      <OwnershipTags content={content} compact />
+                    </td>
                     {visibleColumns.publishDate && (
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-[#7b84b8]">
                         {format(parseSafeDate(content.publishDate), "dd/MM/yyyy")}

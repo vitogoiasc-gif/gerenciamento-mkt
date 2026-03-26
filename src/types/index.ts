@@ -1,3 +1,12 @@
+export type TeamMember = 'Victor' | 'Phillipe' | 'Izamara';
+
+export interface ContentDocument {
+  name: string;
+  url: string;
+  size: number;
+  type: string;
+}
+
 export interface Content {
   id: string;
   title: string;
@@ -5,7 +14,7 @@ export interface Content {
   channel: string;
   format: string;
   publishDate: string;
-  status: 'Ideia' | 'Produção' | 'Revisão' | 'Aprovado' | 'Agendado' | 'Publicado';
+  status: 'Ideia' | 'Produção' | 'Revisão' | 'Aprovado' | 'Agendado' | 'Publicado' | 'Executado';
   publishedPostLink: string | null;
   summary?: string;
   imageData?: string; // base64
@@ -14,6 +23,11 @@ export interface Content {
   videoName?: string;
   externalLink?: string;
   managerComments?: string;
+  documents?: ContentDocument[];
+  // Ownership fields
+  createdBy?: TeamMember;
+  productionBy?: TeamMember;
+  publishedBy?: TeamMember;
 }
 
 export interface FileAsset {

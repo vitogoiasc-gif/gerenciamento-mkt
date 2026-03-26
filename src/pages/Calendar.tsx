@@ -31,6 +31,7 @@ import {
 import { useAppContext } from '../store';
 import { Content } from '../types';
 import ContentModal from '../components/ContentModal';
+import OwnershipTags from '../components/OwnershipTags';
 import { parseSafeDate } from '../utils/date';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -342,6 +343,9 @@ const CalendarPage: React.FC = () => {
 
                     {/* Formato */}
                     <p className="text-[11px] text-gray-400 dark:text-[#505880] mt-1">{content.format}</p>
+
+                    {/* Tags de responsáveis */}
+                    <OwnershipTags content={content} compact className="mt-2" />
 
                     {/* Links */}
                     {(content.publishedPostLink || content.externalLink) && (

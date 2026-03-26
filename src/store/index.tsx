@@ -46,6 +46,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             videoData: item.video_url ?? '',
             channel: item.channel ?? 'Instagram',
             briefing: item.briefing ?? item.description ?? '',
+            // Ownership fields
+            createdBy: item.created_by ?? undefined,
+            productionBy: item.production_by ?? undefined,
+            publishedBy: item.published_by ?? undefined,
           })) as Content[]
         );
       }

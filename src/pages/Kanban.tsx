@@ -28,6 +28,7 @@ import {
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import ContentModal from '../components/ContentModal';
+import OwnershipTags from '../components/OwnershipTags';
 import { parseSafeDate } from '../utils/date';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
@@ -302,6 +303,9 @@ const Kanban: React.FC = () => {
                                 <h4 className="mb-3 line-clamp-2 text-sm font-bold leading-snug text-gray-900 transition-colors group-hover:text-brand-primary dark:text-[#eaecf8]">
                                   {content.title}
                                 </h4>
+
+                                {/* Tags de responsáveis */}
+                                <OwnershipTags content={content} compact className="mb-3" />
 
                                 {/* Footer */}
                                 <div className="mt-auto flex items-center justify-between border-t border-gray-100 pt-3 dark:border-[#1e2d4f]">

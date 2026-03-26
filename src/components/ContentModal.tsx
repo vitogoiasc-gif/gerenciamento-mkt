@@ -19,13 +19,15 @@ import {
   Sparkles,
   Paperclip,
   Plus,
+  Users,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { Content, ContentDocument } from '../types';
+import { Content, ContentDocument, TeamMember } from '../types';
 import { useAppContext } from '../store';
 import { supabase } from '../lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
 import LinkifyText from '../utils/LinkifyText';
+import { TEAM_MEMBERS, MEMBER_COLOR_CLASS } from '../utils/ownershipTags';
 
 // ─── Status config ────────────────────────────────────────────────────────────
 
@@ -98,6 +100,9 @@ const ContentModal: React.FC<ContentModalProps> = ({
     externalLink: '',
     managerComments: '',
     documents: [],
+    createdBy: undefined,
+    productionBy: undefined,
+    publishedBy: undefined,
   });
 
   const [formData, setFormData] = useState<Partial<Content>>(emptyForm());
@@ -121,6 +126,9 @@ const ContentModal: React.FC<ContentModalProps> = ({
         externalLink:    contentToEdit.externalLink    ?? (contentToEdit as any).external_link    ?? '',
         managerComments: contentToEdit.managerComments ?? (contentToEdit as any).manager_comments ?? '',
         documents: contentToEdit.documents ?? (contentToEdit as any).documents ?? [],
+        createdBy:    contentToEdit.createdBy    ?? (contentToEdit as any).created_by    ?? undefined,
+        productionBy: contentToEdit.productionBy ?? (contentToEdit as any).production_by ?? undefined,
+        publishedBy:  contentToEdit.publishedBy  ?? (contentToEdit as any).published_by  ?? undefined,
       });
     } else {
       setFormData(emptyForm());
@@ -225,6 +233,10 @@ const ContentModal: React.FC<ContentModalProps> = ({
       toast.error('Preencha título e data de entrega.');
       return;
     }
+    if (!formData.createdBy) {
+      toast.error('Selecione quem criou o conteúdo.');
+      return;
+    }
     setIsSaving(true);
     const payload = {
       title:               formData.title,
@@ -240,6 +252,9 @@ const ContentModal: React.FC<ContentModalProps> = ({
       video_url:           formData.videoData         || '',
       scheduled_for:       formData.publishDate       || null,
       documents:           formData.documents         ?? [],
+      created_by:          formData.createdBy         || null,
+      production_by:       formData.productionBy      || null,
+      published_by:        formData.publishedBy       || null,
     };
     try {
       if (isEditing && contentToEdit) {
@@ -257,6 +272,9 @@ const ContentModal: React.FC<ContentModalProps> = ({
           channel:          data.channel            ?? formData.channel            ?? 'Instagram',
           briefing:         data.briefing           ?? data.description            ?? formData.briefing ?? '',
           documents:        data.documents           ?? formData.documents           ?? [],
+          createdBy:        data.created_by         ?? formData.createdBy          ?? undefined,
+          productionBy:     data.production_by      ?? formData.productionBy       ?? undefined,
+          publishedBy:      data.published_by       ?? formData.publishedBy        ?? undefined,
         } as Content);
         toast.success('Conteúdo atualizado!');
       } else {
@@ -277,6 +295,9 @@ const ContentModal: React.FC<ContentModalProps> = ({
           title:            data.title              ?? formData.title              ?? '',
           briefing:         data.briefing           ?? data.description            ?? formData.briefing ?? '',
           documents:        data.documents           ?? formData.documents           ?? [],
+          createdBy:        data.created_by         ?? formData.createdBy          ?? undefined,
+          productionBy:     data.production_by      ?? formData.productionBy       ?? undefined,
+          publishedBy:      data.published_by       ?? formData.publishedBy        ?? undefined,
         } as Content);
         toast.success('Conteúdo criado!');
       }
@@ -524,6 +545,86 @@ const ContentModal: React.FC<ContentModalProps> = ({
                     {currentStatus.label}
                   </div>
                 )}
+              </div>
+            </div>
+
+            {/* Responsáveis */}
+            <div className="rounded-xl border border-gray-100 dark:border-[#1e2d4f] bg-gray-50/50 dark:bg-[#1a2540]/30 p-4 space-y-4">
+              <FieldLabel icon={<Users size={12} />}>Responsáveis</FieldLabel>
+              
+              <div className="grid grid-cols-3 gap-3">
+                {/* Criado por - OBRIGATÓRIO */}
+                <div>
+                  <p className="text-[10px] font-semibold text-gray-400 dark:text-[#505880] uppercase tracking-wider mb-1.5">
+                    Criado por <span className="text-red-500">*</span>
+                  </p>
+                  <div className="relative">
+                    <select
+                      required
+                      className={`${field} appearance-none pr-8 cursor-pointer ${
+                        formData.createdBy ? MEMBER_COLOR_CLASS[formData.createdBy] : ''
+                      }`}
+                      value={formData.createdBy || ''}
+                      onChange={e => setFormData({ ...formData, createdBy: e.target.value as TeamMember || undefined })}
+                    >
+                      <option value="">Selecione...</option>
+                      {TEAM_MEMBERS.map(m => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
+                      <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
+                        <path d="M1 1l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Produzido por - OPCIONAL */}
+                <div>
+                  <p className="text-[10px] font-semibold text-gray-400 dark:text-[#505880] uppercase tracking-wider mb-1.5">
+                    Produzido por
+                  </p>
+                  <div className="relative">
+                    <select
+                      className={`${field} appearance-none pr-8 cursor-pointer ${
+                        formData.productionBy ? MEMBER_COLOR_CLASS[formData.productionBy] : ''
+                      }`}
+                      value={formData.productionBy || ''}
+                      onChange={e => setFormData({ ...formData, productionBy: e.target.value as TeamMember || undefined })}
+                    >
+                      <option value="">-</option>
+                      {TEAM_MEMBERS.map(m => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
+                      <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
+                        <path d="M1 1l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Publicado por - OPCIONAL */}
+                <div>
+                  <p className="text-[10px] font-semibold text-gray-400 dark:text-[#505880] uppercase tracking-wider mb-1.5">
+                    Publicado por
+                  </p>
+                  <div className="relative">
+                    <select
+                      className={`${field} appearance-none pr-8 cursor-pointer ${
+                        formData.publishedBy ? MEMBER_COLOR_CLASS[formData.publishedBy] : ''
+                      }`}
+                      value={formData.publishedBy || ''}
+                      onChange={e => setFormData({ ...formData, publishedBy: e.target.value as TeamMember || undefined })}
+                    >
+                      <option value="">-</option>
+                      {TEAM_MEMBERS.map(m => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
+                      <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
+                        <path d="M1 1l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
