@@ -13,6 +13,9 @@ import {
   Zap,
   CheckCircle2,
   Clock,
+  Lightbulb,
+  Clapperboard,
+  Send,
 } from 'lucide-react';
 import {
   BarChart,
@@ -28,7 +31,7 @@ import {
   Cell,
 } from 'recharts';
 import { TeamMember } from '../types';
-import { TEAM_MEMBERS, MEMBER_COLOR_CLASS } from '../utils/ownershipTags';
+import { TEAM_MEMBERS } from '../utils/ownershipTags';
 
 // Cores para cada membro
 const MEMBER_COLORS: Record<TeamMember, string> = {
@@ -37,13 +40,13 @@ const MEMBER_COLORS: Record<TeamMember, string> = {
   Izamara: '#8b5cf6',  // violet-500
 };
 
-const STATUS_FINAL = ['Publicado', 'Executado'];
+// Ordem dos status para calcular avanço
+const STATUS_ORDER = ['Ideia', 'Produção', 'Revisão', 'Aprovado', 'Agendado', 'Publicado', 'Executado'];
 
 const Dashboard: React.FC = () => {
   const { contents } = useAppContext();
   const [selectedMonth, setSelectedMonth] = useState(new Date());
 
-  // Filtrar conteúdos do mês selecionado
   const monthStart = startOfMonth(selectedMonth);
   const monthEnd = endOfMonth(selectedMonth);
 
@@ -59,41 +62,52 @@ const Dashboard: React.FC = () => {
     });
   }, [contents, monthStart, monthEnd]);
 
-  // Calcular métricas por pessoa
+  // Métricas por pessoa com taxas justas por papel
   const metricsPerPerson = useMemo(() => {
-    const metrics: Record<TeamMember, {
-      criados: number;
-      produzidos: number;
-      publicados: number;
-      total: number;
-      concluidos: number;
-      taxaConclusao: number;
-    }> = {
-      Victor: { criados: 0, produzidos: 0, publicados: 0, total: 0, concluidos: 0, taxaConclusao: 0 },
-      Phillipe: { criados: 0, produzidos: 0, publicados: 0, total: 0, concluidos: 0, taxaConclusao: 0 },
-      Izamara: { criados: 0, produzidos: 0, publicados: 0, total: 0, concluidos: 0, taxaConclusao: 0 },
+    const base = () => ({
+      criados: 0,
+      produzidos: 0,
+      publicados: 0,
+      // criação: avançou de Ideia para Produção ou além
+      criadosAvancaram: 0,
+      // produção: avançou de Produção para Revisão ou além
+      produzidosAvancaram: 0,
+      // publicação: chegou em Publicado ou Executado
+      publicadosConcluidos: 0,
+      taxaCriacao: null as number | null,
+      taxaProducao: null as number | null,
+      taxaPublicacao: null as number | null,
+    });
+
+    const metrics: Record<TeamMember, ReturnType<typeof base>> = {
+      Victor: base(),
+      Phillipe: base(),
+      Izamara: base(),
     };
 
     filteredContents.forEach(c => {
+      const statusIdx = STATUS_ORDER.indexOf(c.status);
+
       if (c.createdBy && metrics[c.createdBy]) {
         metrics[c.createdBy].criados++;
-        metrics[c.createdBy].total++;
-        if (STATUS_FINAL.includes(c.status)) {
-          metrics[c.createdBy].concluidos++;
-        }
+        if (statusIdx >= 1) metrics[c.createdBy].criadosAvancaram++;
       }
       if (c.productionBy && metrics[c.productionBy]) {
         metrics[c.productionBy].produzidos++;
+        if (statusIdx >= 2) metrics[c.productionBy].produzidosAvancaram++;
       }
       if (c.publishedBy && metrics[c.publishedBy]) {
         metrics[c.publishedBy].publicados++;
+        if (statusIdx >= 5) metrics[c.publishedBy].publicadosConcluidos++;
       }
     });
 
-    // Calcular taxa de conclusão
+    // Taxas: null significa que a pessoa não tem atividade naquele papel (sem injustiça)
     Object.keys(metrics).forEach(key => {
       const m = metrics[key as TeamMember];
-      m.taxaConclusao = m.total > 0 ? Math.round((m.concluidos / m.total) * 100) : 0;
+      m.taxaCriacao    = m.criados    > 0 ? Math.round((m.criadosAvancaram     / m.criados)    * 100) : null;
+      m.taxaProducao   = m.produzidos > 0 ? Math.round((m.produzidosAvancaram  / m.produzidos) * 100) : null;
+      m.taxaPublicacao = m.publicados > 0 ? Math.round((m.publicadosConcluidos / m.publicados) * 100) : null;
     });
 
     return metrics;
@@ -109,7 +123,7 @@ const Dashboard: React.FC = () => {
     }));
   }, [metricsPerPerson]);
 
-  // Dados para o gráfico de pizza (distribuição de criação)
+  // Dados para o gráfico de pizza
   const pieChartData = useMemo(() => {
     return TEAM_MEMBERS
       .map(member => ({
@@ -121,14 +135,49 @@ const Dashboard: React.FC = () => {
   }, [metricsPerPerson]);
 
   // Métricas gerais
-  const totalContents = filteredContents.length;
-  const totalConcluidos = filteredContents.filter(c => STATUS_FINAL.includes(c.status)).length;
+  const totalContents   = filteredContents.length;
+  const totalConcluidos = filteredContents.filter(c => STATUS_ORDER.indexOf(c.status) >= 5).length;
   const totalEmAndamento = totalContents - totalConcluidos;
   const taxaGeralConclusao = totalContents > 0 ? Math.round((totalConcluidos / totalContents) * 100) : 0;
 
-  // Navegação de mês
   const goToPreviousMonth = () => setSelectedMonth(subMonths(selectedMonth, 1));
-  const goToNextMonth = () => setSelectedMonth(subMonths(selectedMonth, -1));
+  const goToNextMonth     = () => setSelectedMonth(subMonths(selectedMonth, -1));
+  const goToCurrentMonth  = () => setSelectedMonth(new Date());
+
+  const isCurrentMonth = format(selectedMonth, 'yyyy-MM') === format(new Date(), 'yyyy-MM');
+
+  // Sub-componente de barra de taxa por papel
+  const RateBar = ({
+    label,
+    icon,
+    value,
+    count,
+    total,
+    color,
+  }: {
+    label: string;
+    icon: React.ReactNode;
+    value: number | null;
+    count: number;
+    total: number;
+    color: string;
+  }) => {
+    if (value === null) return null;
+    return (
+      <div>
+        <div className="flex items-center justify-between text-[10px] text-gray-400 dark:text-[#505880] mb-1">
+          <span className="flex items-center gap-1">{icon}{label}</span>
+          <span className="font-semibold" style={{ color }}>{value}% <span className="font-normal text-gray-400 dark:text-[#505880]">({count}/{total})</span></span>
+        </div>
+        <div className="h-1.5 bg-gray-100 dark:bg-[#1a2540] rounded-full overflow-hidden">
+          <div
+            className="h-full rounded-full transition-all duration-500"
+            style={{ width: `${value}%`, backgroundColor: color }}
+          />
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -161,6 +210,14 @@ const Dashboard: React.FC = () => {
           >
             <ChevronRight size={20} className="text-gray-500 dark:text-[#7b84b8]" />
           </button>
+          {!isCurrentMonth && (
+            <button
+              onClick={goToCurrentMonth}
+              className="ml-1 px-2 py-1 text-[11px] font-semibold rounded-lg bg-brand-primary/10 text-brand-primary hover:bg-brand-primary/20 transition-colors"
+            >
+              Hoje
+            </button>
+          )}
         </div>
       </div>
 
@@ -228,30 +285,30 @@ const Dashboard: React.FC = () => {
         {TEAM_MEMBERS.map(member => {
           const m = metricsPerPerson[member];
           const total = m.criados + m.produzidos + m.publicados;
+          const color = MEMBER_COLORS[member];
           return (
             <div
               key={member}
               className="bg-white dark:bg-[#131c35] rounded-xl border-2 p-5 transition-all hover:shadow-lg"
-              style={{ borderColor: MEMBER_COLORS[member] + '40' }}
+              style={{ borderColor: color + '40' }}
             >
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div
-                    className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-lg"
-                    style={{ backgroundColor: MEMBER_COLORS[member] }}
-                  >
-                    {member[0]}
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900 dark:text-[#e8eaf6]">{member}</h3>
-                    <p className="text-xs text-gray-400 dark:text-[#505880]">
-                      {total} contribuições no mês
-                    </p>
-                  </div>
+              <div className="flex items-center gap-3 mb-4">
+                <div
+                  className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0"
+                  style={{ backgroundColor: color }}
+                >
+                  {member[0]}
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900 dark:text-[#e8eaf6]">{member}</h3>
+                  <p className="text-xs text-gray-400 dark:text-[#505880]">
+                    {total} contribuições no mês
+                  </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              {/* Contagens */}
+              <div className="grid grid-cols-3 gap-2 mb-4">
                 <div className="bg-gray-50 dark:bg-[#1a2540] rounded-lg p-3 text-center">
                   <p className="text-xl font-bold text-gray-900 dark:text-[#e8eaf6]">{m.criados}</p>
                   <p className="text-[10px] text-gray-400 dark:text-[#505880] uppercase">Criados</p>
@@ -266,21 +323,37 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
 
-              {/* Barra de progresso de conclusão */}
-              <div className="mt-4">
-                <div className="flex justify-between text-[10px] text-gray-400 dark:text-[#505880] mb-1">
-                  <span>Taxa de Conclusão</span>
-                  <span>{m.concluidos}/{m.total} conteúdos</span>
-                </div>
-                <div className="h-2 bg-gray-100 dark:bg-[#1a2540] rounded-full overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-500"
-                    style={{
-                      width: `${m.taxaConclusao}%`,
-                      backgroundColor: MEMBER_COLORS[member],
-                    }}
-                  />
-                </div>
+              {/* Taxas por papel — só exibe se a pessoa tem atividade naquele papel */}
+              <div className="space-y-2.5">
+                <RateBar
+                  label="Taxa de Criação"
+                  icon={<Lightbulb size={10} />}
+                  value={m.taxaCriacao}
+                  count={m.criadosAvancaram}
+                  total={m.criados}
+                  color="#3b82f6"
+                />
+                <RateBar
+                  label="Taxa de Produção"
+                  icon={<Clapperboard size={10} />}
+                  value={m.taxaProducao}
+                  count={m.produzidosAvancaram}
+                  total={m.produzidos}
+                  color="#8b5cf6"
+                />
+                <RateBar
+                  label="Taxa de Publicação"
+                  icon={<Send size={10} />}
+                  value={m.taxaPublicacao}
+                  count={m.publicadosConcluidos}
+                  total={m.publicados}
+                  color={color}
+                />
+                {m.taxaCriacao === null && m.taxaProducao === null && m.taxaPublicacao === null && (
+                  <p className="text-[11px] text-gray-400 dark:text-[#505880] text-center py-1">
+                    Sem atividade no mês
+                  </p>
+                )}
               </div>
             </div>
           );
@@ -309,6 +382,8 @@ const Dashboard: React.FC = () => {
                     fontSize: '12px',
                     color: '#e8eaf6',
                   }}
+                  itemStyle={{ color: '#e8eaf6' }}
+                  labelStyle={{ color: '#e8eaf6' }}
                 />
                 <Legend wrapperStyle={{ fontSize: '12px' }} />
                 <Bar dataKey="Criados" fill="#3b82f6" radius={[4, 4, 0, 0]} />
@@ -382,7 +457,7 @@ const Dashboard: React.FC = () => {
         <div className="px-5 py-4 border-b border-gray-200 dark:border-[#1e2d4f]">
           <h3 className="text-sm font-bold text-gray-900 dark:text-[#e8eaf6] flex items-center gap-2">
             <FileText size={18} className="text-brand-primary" />
-            Resumo do Mês - {format(selectedMonth, 'MMMM yyyy', { locale: ptBR })}
+            Resumo do Mês — {format(selectedMonth, 'MMMM yyyy', { locale: ptBR })}
           </h3>
         </div>
         <div className="overflow-x-auto">
@@ -401,18 +476,32 @@ const Dashboard: React.FC = () => {
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-[#7b84b8] uppercase tracking-wider">
                   Publicados
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-[#7b84b8] uppercase tracking-wider">
-                  Total
+                <th className="px-6 py-3 text-center text-xs font-medium text-blue-500 dark:text-blue-400 uppercase tracking-wider">
+                  T. Criação
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-[#7b84b8] uppercase tracking-wider">
-                  Conclusão
+                <th className="px-6 py-3 text-center text-xs font-medium text-purple-500 dark:text-purple-400 uppercase tracking-wider">
+                  T. Produção
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-emerald-500 dark:text-emerald-400 uppercase tracking-wider">
+                  T. Publicação
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-[#131c35] divide-y divide-gray-200 dark:divide-gray-800">
               {TEAM_MEMBERS.map(member => {
                 const m = metricsPerPerson[member];
-                const total = m.criados + m.produzidos + m.publicados;
+                const rateCell = (value: number | null, color: string) =>
+                  value === null ? (
+                    <span className="text-gray-300 dark:text-[#2d3a5e] text-xs">—</span>
+                  ) : (
+                    <span
+                      className="px-3 py-1 rounded-full text-xs font-semibold text-white"
+                      style={{ backgroundColor: color }}
+                    >
+                      {value}%
+                    </span>
+                  );
+
                 return (
                   <tr key={member} className="hover:bg-gray-50 dark:hover:bg-[#1a2540]/50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -436,17 +525,13 @@ const Dashboard: React.FC = () => {
                       {m.publicados}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <span className="px-3 py-1 rounded-full text-sm font-semibold bg-gray-100 dark:bg-[#1a2540] text-gray-800 dark:text-[#c8cce8]">
-                        {total}
-                      </span>
+                      {rateCell(m.taxaCriacao, '#3b82f6')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <span
-                        className="px-3 py-1 rounded-full text-sm font-semibold text-white"
-                        style={{ backgroundColor: MEMBER_COLORS[member] }}
-                      >
-                        {m.taxaConclusao}%
-                      </span>
+                      {rateCell(m.taxaProducao, '#8b5cf6')}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      {rateCell(m.taxaPublicacao, MEMBER_COLORS[member])}
                     </td>
                   </tr>
                 );
