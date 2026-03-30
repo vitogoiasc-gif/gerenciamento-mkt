@@ -337,7 +337,7 @@ const Dashboard: React.FC = () => {
                     outerRadius={100}
                     paddingAngle={5}
                     dataKey="value"
-                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                    label={false}
                     labelLine={false}
                   >
                     {pieChartData.map((entry, index) => (
@@ -351,6 +351,16 @@ const Dashboard: React.FC = () => {
                       borderRadius: '8px',
                       fontSize: '12px',
                       color: '#e8eaf6',
+                    }}
+                    itemStyle={{ color: '#e8eaf6' }}
+                    labelStyle={{ color: '#e8eaf6' }}
+                    formatter={(value: number, name: string) => [`${value} conteúdos`, name]}
+                  />
+                  <Legend
+                    formatter={(value, entry: any) => {
+                      const total = pieChartData.reduce((sum, d) => sum + d.value, 0);
+                      const percent = total > 0 ? ((entry.payload.value / total) * 100).toFixed(0) : 0;
+                      return <span style={{ color: entry.color, fontSize: '13px' }}>{value} ({percent}%)</span>;
                     }}
                   />
                 </PieChart>
