@@ -42,7 +42,7 @@ const STATUS_OPTIONS: { value: Content['status']; label: string; pill: string; d
 ];
 
 const CHANNEL_OPTIONS = ['Instagram', 'TikTok', 'Blog', 'YouTube', 'LinkedIn', 'Email', 'Interno'];
-const FORMAT_OPTIONS = ['Post', 'Reels', 'Apresentação', 'Carrossel', 'Vídeo', 'Comunicado', 'Interno', 'Docx', 'Reunião', 'Web', 'Outros'];
+const FORMAT_OPTIONS = ['Post', 'Reels', 'Apresentação', 'Carrossel', 'Flyer', 'Vídeo', 'Comunicado', 'Interno', 'Docx', 'Reunião', 'Web', 'Outros'];
 
 // ─── Field label ──────────────────────────────────────────────────────────────
 
