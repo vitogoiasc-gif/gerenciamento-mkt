@@ -42,6 +42,7 @@ const STATUS_OPTIONS: { value: Content['status']; label: string; pill: string; d
 ];
 
 const CHANNEL_OPTIONS = ['Instagram', 'TikTok', 'Blog', 'YouTube', 'LinkedIn', 'Email', 'Interno'];
+const FORMAT_OPTIONS = ['Post', 'Reels', 'Apresentação', 'Carrossel', 'Vídeo', 'Comunicado', 'Interno', 'Docx', 'Reunião', 'Web', 'Outros'];
 
 // ─── Field label ──────────────────────────────────────────────────────────────
 
@@ -501,13 +502,20 @@ const ContentModal: React.FC<ContentModalProps> = ({
               </div>
               <div>
                 <FieldLabel icon={<Tag size={12} />}>Formato</FieldLabel>
-                <input
-                  type="text"
-                  placeholder="Post, Reels, Stories..."
-                  className={field}
-                  value={formData.format || ''}
-                  onChange={e => setFormData({ ...formData, format: e.target.value })}
-                />
+                <div className="relative">
+                  <select
+                    className={field + ' appearance-none pr-8 cursor-pointer'}
+                    value={formData.format || 'Post'}
+                    onChange={e => setFormData({ ...formData, format: e.target.value })}
+                  >
+                    {FORMAT_OPTIONS.map(f => <option key={f} value={f}>{f}</option>)}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
+                    <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
+                      <path d="M1 1l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                </div>
               </div>
             </div>
 
